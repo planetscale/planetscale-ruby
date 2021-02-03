@@ -24,7 +24,7 @@ Or install it yourself as:
 
 This Gem exposes one class, PSDB::Proxy, which can be configured from the environment, or with a hash on initialization. The current configuration options are as follows:
 
-```
+```ruby
 @token_name = kwargs[:token_id] || ENV['PSDB_TOKEN_NAME']
 @token = kwargs[:token] || ENV['PSDB_TOKEN']
 @org = kwargs[:org] || ENV['PSDB_ORG']
@@ -34,13 +34,13 @@ This Gem exposes one class, PSDB::Proxy, which can be configured from the enviro
 
 If your environment variables are present, simply instantiating the class:
 
-```
+```ruby
 proxy = PSDB::Proxy.new
 ```
 
 To run the proxy process in the background, run:
 
-```
+```ruby
 proxy.start
 ```
 
