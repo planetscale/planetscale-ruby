@@ -1,31 +1,44 @@
-require "psdb/version"
+# frozen_string_literal: true
+
+require 'psdb/version'
 
 module PSDB
   class Proxy
-    def initialize(kwargs = {})
-      @token_name = kwargs[:token_id] || ENV['PSDB_TOKEN_NAME']
-      @token = kwargs[:token] || ENV['PSDB_TOKEN']
-      @org = kwargs[:org] || ENV['PSDB_ORG']
+    AUTH_SERVICE_TOKEN = 1 # Use Service Tokens for Auth
+    AUTH_PSCALE = 2 # Use externally configured `pscale` auth & org config
+
+    def initialize(auth_method: AUTH_SERVICE_TOKEN, **kwargs)
+      @auth_method = auth_method
+
       @db = kwargs[:db] || ENV['PSDB_DB']
       @branch = kwargs[:branch] || ENV['PSDB_DB_BRANCH']
-      if [@token_name, @token, @org, @db, @branch].any? { |e| e.nil? }
-        raise ArgumentError.new("missing required configuration variables")
+
+      raise ArgumentError, 'missing required configuration variables' if [@db, @branch].any?(&:nil?)
+
+      @org = kwargs[:org] || ENV['PSDB_ORG']
+      @token_name = kwargs[:token_id] || ENV['PSDB_TOKEN_NAME']
+      @token = kwargs[:token] || ENV['PSDB_TOKEN']
+
+      if token_auth? && [@org, @token_name, @token].any?(&:nil?)
+        raise ArgumentError, 'missing configured service token auth'
       end
+
       @binary = File.expand_path("../../vendor/pscale-#{Gem::Platform.local.os}", __FILE__)
     end
 
     def database_password
-      args = "#{@binary} #{token_args} branch --org #{@org} --json status #{@db} #{@branch}"
+      args = [@binary, auth_args, 'branch', org_args, '--json status', @db, @branch].compact.join(' ')
       stdout, status = Open3.capture2(args)
-      raise ArgumentError.new("could not get database password") unless status.success?
-      return JSON.parse(stdout)['password']
+      raise ArgumentError, 'could not get database password' unless status.success?
+
+      JSON.parse(stdout)['password']
     end
 
     def start
-      args = "#{token_args} connect --org #{@org} #{@db} #{@branch}"
+      args = [auth_args, 'connect', org_args, @db, @branch].compact.join(' ')
       pid = fork do
         tries = 0
-        while true
+        loop do
           puts "starting proxy try: #{tries}"
           system "#{@binary} #{args}"
           tries += 1
@@ -37,8 +50,16 @@ module PSDB
 
     private
 
-    def token_args
-      "--service-token-name #{@token_name} --service-token #{@token}"
+    def token_auth?
+      @auth_method == AUTH_SERVICE_TOKEN
+    end
+
+    def org_args
+      "--org #{@org}" if @org
+    end
+
+    def auth_args
+      "--service-token-name #{@token_name} --service-token #{@token}" if token_auth?
     end
   end
 end
