@@ -5,9 +5,9 @@ require 'ffi'
 
 module PSDB
   class <<self
-    attr_reader :config
-
-    def configure(auth_method:, **kwargs)
+    attr_reader :config, :inject
+  
+    def configure(auth_method: AUTH_PSCALE, **kwargs)
       @proxy = PSDB::Proxy.new(auth_method: auth_method, **kwargs)
       @config = true
     end
@@ -26,9 +26,11 @@ module PSDB
     AUTH_PSCALE = 2 # Use externally configured `pscale` auth & org config
 
     extend FFI::Library
-    ffi_lib '/Users/nickvanw/planetscale/cli/cmd/lib/test.so'
-    attach_function :startproxyfromenv, %i[string string string], :bool
+    ffi_lib File.expand_path("../../vendor/psdb-#{Gem::Platform.local.os}.so", __FILE__)
+    attach_function :proxyfromenv, %i[string string string], :bool
     attach_function :passwordfromenv, %i[string string string], :string
+    attach_function :proxyfromtoken, %i[string string string string string], :bool
+    attach_function :passwordfromtoken, %i[string string string string string], :string
 
     def initialize(auth_method: AUTH_SERVICE_TOKEN, **kwargs)
       @auth_method = auth_method
@@ -43,39 +45,22 @@ module PSDB
       @token = kwargs[:token] || ENV['PSDB_TOKEN']
 
       raise ArgumentError, 'missing configured service token auth' if token_auth? && [@token_name, @token].any?(&:nil?)
-
-      @binary = File.expand_path("../../vendor/pscale-#{Gem::Platform.local.os}", __FILE__)
     end
 
     def database_password
       if env_auth?
         passwordfromenv(@org, @db, @branch)
       else
-        raise ArgumentError, 'not implemented'
+        passwordfromtoken(@token_name, @token, @org, @db, @branch)
       end
     end
 
     def start
       if env_auth?
-        startproxyfromenv(@org, @db, @branch)
+        proxyfromenv(@org, @db, @branch)
       else
-        raise ArgumentError, 'not implemented'
+        proxyfromtoken(@token_name, @token, @org, @db, @branch)
       end
-    end
-
-    def start_binary
-      args = [auth_args, 'connect', org_args, @db, @branch].compact.join(' ')
-      @pid = fork do
-        tries = 0
-        loop do
-          puts "starting proxy try: #{tries}"
-          exec "#{@binary} #{args}"
-          tries += 1
-          sleep 1
-        end
-      end
-
-      Process.detach(@pid)
     end
 
     private
@@ -86,14 +71,6 @@ module PSDB
 
     def token_auth?
       @auth_method == AUTH_SERVICE_TOKEN
-    end
-
-    def org_args
-      "--org #{@org}" if @org
-    end
-
-    def auth_args
-      "--service-token-name #{@token_name} --service-token #{@token}" if token_auth?
     end
   end
 end
