@@ -27,9 +27,9 @@ module PSDB
 
     extend FFI::Library
     ffi_lib File.expand_path("../../vendor/psdb-#{Gem::Platform.local.os}.so", __FILE__)
-    attach_function :proxyfromenv, %i[string string string], :bool
+    attach_function :proxyfromenv, %i[string string string], :int
     attach_function :passwordfromenv, %i[string string string], :string
-    attach_function :proxyfromtoken, %i[string string string string string], :bool
+    attach_function :proxyfromtoken, %i[string string string string string], :int
     attach_function :passwordfromtoken, %i[string string string string string], :string
 
     def initialize(auth_method: AUTH_SERVICE_TOKEN, **kwargs)
