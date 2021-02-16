@@ -17,13 +17,13 @@ import (
 	"go.uber.org/zap"
 )
 
-const accessTokenFile string = "~/.config/planetscale"
+const accessTokenDir string = "~/.config/planetscale"
 
 //export proxyfromenv
-func proxyfromenv(org, database, branch *C.char) bool {
+func proxyfromenv(org, database, branch *C.char) int {
 	client, err := newClientFromEnv()
 	if err != nil {
-		return false
+		return -1
 	}
 
 	logger, _ := zap.NewDevelopment()
@@ -38,11 +38,11 @@ func proxyfromenv(org, database, branch *C.char) bool {
 
 	p, err := proxy.NewClient(opts)
 	if err != nil {
-		return false
+		return -2
 	}
 
 	go p.Run(context.Background())
-	return true
+	return 0
 }
 
 //export passwordfromenv
@@ -62,10 +62,10 @@ func passwordfromenv(org, database, branch *C.char) *C.char {
 }
 
 //export proxyfromtoken
-func proxyfromtoken(tokenName, token, org, database, branch *C.char) bool {
+func proxyfromtoken(tokenName, token, org, database, branch *C.char) int {
 	client, err := newClientFromServiceToken(C.GoString(tokenName), C.GoString(token))
 	if err != nil {
-		return false
+		return -1
 	}
 
 	logger, _ := zap.NewDevelopment()
@@ -80,11 +80,11 @@ func proxyfromtoken(tokenName, token, org, database, branch *C.char) bool {
 
 	p, err := proxy.NewClient(opts)
 	if err != nil {
-		return false
+		return -2
 	}
 
 	go p.Run(context.Background())
-	return true
+	return 0
 }
 
 //export passwordfromtoken
@@ -161,7 +161,7 @@ func newClientFromServiceToken(name, token string) (*planetscale.Client, error) 
 }
 
 func accessToken() (string, error) {
-	cfgDir, err := homedir.Expand(accessTokenFile)
+	cfgDir, err := homedir.Expand(accessTokenDir)
 	if err != nil {
 		return "", err
 	}

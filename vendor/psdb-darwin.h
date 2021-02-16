@@ -68,9 +68,9 @@ typedef struct { void *data; GoInt len; GoInt cap; } GoSlice;
 extern "C" {
 #endif
 
-extern GoUint8 proxyfromenv(char* org, char* database, char* branch);
+extern GoInt proxyfromenv(char* org, char* database, char* branch);
 extern char* passwordfromenv(char* org, char* database, char* branch);
-extern GoUint8 proxyfromtoken(char* tokenName, char* token, char* org, char* database, char* branch);
+extern GoInt proxyfromtoken(char* tokenName, char* token, char* org, char* database, char* branch);
 extern char* passwordfromtoken(char* tokenName, char* token, char* org, char* database, char* branch);
 
 #ifdef __cplusplus
