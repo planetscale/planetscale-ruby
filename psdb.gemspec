@@ -5,7 +5,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'psdb/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'psdb-ruby'
+  spec.name          = 'psdb'
   spec.version       = PSDB::VERSION
   spec.authors       = ['Nick Van Wiggeren']
   spec.email         = ['nick@planetscale.com']
@@ -23,6 +23,7 @@ Gem::Specification.new do |spec|
     spec.metadata['homepage_uri'] = spec.homepage
     spec.metadata['source_code_uri'] = 'https://github.com/planetscale/psdb-ruby'
     spec.metadata['changelog_uri'] = 'https://github.com/planetscale/psdb-ruby'
+    spec.metadata['github_repo'] = 'ssh://github.com/planetscale/psdb-ruby'
   else
     raise 'RubyGems 2.0 or newer is required to protect against ' \
       'public gem pushes.'
