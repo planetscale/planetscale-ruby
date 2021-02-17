@@ -17,7 +17,7 @@ module PSDB
     end
 
     def database_password
-      @proxy.database_password
+      @password ||= @proxy.database_password
     end
   end
 
