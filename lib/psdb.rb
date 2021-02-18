@@ -7,7 +7,7 @@ module PSDB
   class <<self
     attr_reader :config, :inject
   
-    def configure(auth_method: AUTH_PSCALE, **kwargs)
+    def start(auth_method: AUTH_PSCALE, **kwargs)
       @proxy = PSDB::Proxy.new(auth_method: auth_method, **kwargs)
       @proxy.start
       @config = true
