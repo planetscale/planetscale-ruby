@@ -7,8 +7,6 @@ import (
 	"os"
 	"path"
 
-	_ "net/http/pprof"
-
 	"github.com/mitchellh/go-homedir"
 	"github.com/planetscale/planetscale-go/planetscale"
 )

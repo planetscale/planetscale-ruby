@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 
+	_ "net/http/pprof"
+
 	"github.com/armon/circbuf"
 	"github.com/gorilla/mux"
 	"github.com/planetscale/planetscale-go/planetscale"
@@ -35,12 +37,13 @@ func newController(org, database, branch string, opts ...controllerOpt) (*contro
 	buf, _ := circbuf.NewBuffer(16384)
 
 	c := &controller{
-		org:    org,
-		db:     database,
-		branch: branch,
-		logBuf: buf,
-		logger: createLogger(buf),
-		r:      mux.NewRouter(),
+		listenAddr: "127.0.0.1:6060", // default
+		org:        org,
+		db:         database,
+		branch:     branch,
+		logBuf:     buf,
+		logger:     createLogger(buf),
+		r:          mux.NewRouter(),
 	}
 
 	c.r.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
@@ -59,7 +62,6 @@ func (c *controller) start() error {
 	opts := proxy.Options{
 		CertSource: newRemoteCertSource(c.client),
 		LocalAddr:  "127.0.0.1:3307",
-		RemoteAddr: "",
 		Instance:   fmt.Sprintf("%s/%s/%s", c.org, c.db, c.branch),
 		Logger:     c.logger,
 	}
@@ -70,7 +72,7 @@ func (c *controller) start() error {
 	}
 
 	go p.Run(context.Background())
-	go http.ListenAndServe("localhost:6060", logHandler(c.logger)(c.r))
+	go http.ListenAndServe(c.listenAddr, logHandler(c.logger)(c.r))
 	return nil
 }
 
@@ -79,11 +81,16 @@ func (c *controller) logDump(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *controller) dbPass(w http.ResponseWriter, r *http.Request) {
-	status, _ := c.client.DatabaseBranches.GetStatus(context.Background(), &planetscale.GetDatabaseBranchStatusRequest{
+	status, err := c.client.DatabaseBranches.GetStatus(context.Background(), &planetscale.GetDatabaseBranchStatusRequest{
 		Organization: c.org,
 		Database:     c.db,
 		Branch:       c.branch,
 	})
+
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
 
 	w.Write([]byte(status.Password))
 }
