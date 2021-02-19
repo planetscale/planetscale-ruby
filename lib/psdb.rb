@@ -7,30 +7,26 @@ module PSDB
   class <<self
     attr_reader :config, :inject
   
-    def configure(auth_method: AUTH_PSCALE, **kwargs)
+    def start(auth_method: AUTH_PSCALE, **kwargs)
       @proxy = PSDB::Proxy.new(auth_method: auth_method, **kwargs)
+      @proxy.start
       @config = true
     end
 
-    def start
-      @proxy.start
-    end
-
     def database_password
-      @password ||= @proxy.database_password
+      @proxy.database_password
     end
   end
 
   class Proxy
     AUTH_SERVICE_TOKEN = 1 # Use Service Tokens for Auth
     AUTH_PSCALE = 2 # Use externally configured `pscale` auth & org config
+    CONTROL_URL = 'http://127.0.0.1:6060'
 
     extend FFI::Library
-    ffi_lib File.expand_path("../../vendor/psdb-#{Gem::Platform.local.os}.so", __FILE__)
-    attach_function :proxyfromenv, %i[string string string], :int
-    attach_function :passwordfromenv, %i[string string string], :string
-    attach_function :proxyfromtoken, %i[string string string string string], :int
-    attach_function :passwordfromtoken, %i[string string string string string], :string
+    ffi_lib File.expand_path("../../proxy/psdb-#{Gem::Platform.local.os}.so", __FILE__)
+    attach_function :startfromenv, %i[string string string], :int
+    attach_function :startfromtoken, %i[string string string string string], :int
 
     def initialize(auth_method: AUTH_SERVICE_TOKEN, **kwargs)
       @auth_method = auth_method
@@ -48,18 +44,14 @@ module PSDB
     end
 
     def database_password
-      if env_auth?
-        passwordfromenv(@org, @db, @branch)
-      else
-        passwordfromtoken(@token_name, @token, @org, @db, @branch)
-      end
+      Net::HTTP.get(URI("#{CONTROL_URL}/password"))
     end
 
     def start
       if env_auth?
-        proxyfromenv(@org, @db, @branch)
+        startfromenv(@org, @db, @branch)
       else
-        proxyfromtoken(@token_name, @token, @org, @db, @branch)
+        startfromtoken(@token_name, @token, @org, @db, @branch)
       end
     end
 
