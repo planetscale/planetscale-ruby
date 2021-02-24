@@ -92,6 +92,12 @@ func (c *controller) logDump(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *controller) dbPass(w http.ResponseWriter, r *http.Request) {
+	// If we've configured this with no client, we can't fetch the password
+	if c.client == nil {
+		w.WriteHeader(405)
+		return
+	}
+
 	status, err := c.client.DatabaseBranches.GetStatus(context.Background(), &planetscale.GetDatabaseBranchStatusRequest{
 		Organization: c.org,
 		Database:     c.db,

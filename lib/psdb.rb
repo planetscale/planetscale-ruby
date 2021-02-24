@@ -50,13 +50,13 @@ module PSDB
       @remote_addr = kwargs[:remote_addr]
       @certificate = kwargs[:certificate]
 
-      if local_auth? && [@password, @priv_key, @certificate, @cert_chain, @remote_adr].any?(&:nil?)
+      if local_auth? && [@password, @priv_key, @certificate, @cert_chain, @remote_addr].any?(&:nil?)
         raise ArgumentError, 'missing configuration options for auth' 
       end
     end
 
     def database_password
-      return @password if env_local?
+      return @password if local_auth?
       Net::HTTP.get(URI("#{CONTROL_URL}/password"))
     end
 
