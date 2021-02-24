@@ -4,6 +4,10 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -30,6 +34,8 @@ type controller struct {
 	r *mux.Router
 
 	client *planetscale.Client
+
+	certSrc *localCertSource
 }
 
 func newController(org, database, branch string, opts ...controllerOpt) (*controller, error) {
@@ -55,15 +61,20 @@ func newController(org, database, branch string, opts ...controllerOpt) (*contro
 			return nil, err
 		}
 	}
+
 	return c, nil
 }
 
 func (c *controller) start() error {
 	opts := proxy.Options{
-		CertSource: newRemoteCertSource(c.client),
+		CertSource: c.certSrc,
 		LocalAddr:  "127.0.0.1:3307",
 		Instance:   fmt.Sprintf("%s/%s/%s", c.org, c.db, c.branch),
 		Logger:     c.logger,
+	}
+
+	if opts.CertSource == nil {
+		opts.CertSource = newRemoteCertSource(c.client)
 	}
 
 	p, err := proxy.NewClient(opts)
@@ -81,6 +92,12 @@ func (c *controller) logDump(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *controller) dbPass(w http.ResponseWriter, r *http.Request) {
+	// If we've configured this with no client, we can't fetch the password
+	if c.client == nil {
+		w.WriteHeader(405)
+		return
+	}
+
 	status, err := c.client.DatabaseBranches.GetStatus(context.Background(), &planetscale.GetDatabaseBranchStatusRequest{
 		Organization: c.org,
 		Database:     c.db,
@@ -105,6 +122,13 @@ func withClient(ps *planetscale.Client) controllerOpt {
 func withListen(addr string) controllerOpt {
 	return func(c *controller) error {
 		c.listenAddr = addr
+		return nil
+	}
+}
+
+func withLocalCertSource(src *localCertSource) controllerOpt {
+	return func(c *controller) error {
+		c.certSrc = src
 		return nil
 	}
 }
@@ -160,6 +184,31 @@ func (r *remoteCertSource) Cert(ctx context.Context, org, db, branch string) (*p
 	}, nil
 }
 
+type localCertSource struct {
+	privKey     string
+	certificate string
+	certChain   string
+	remoteAddr  string
+}
+
+func (l *localCertSource) Cert(ctx context.Context, org, db, branch string) (*proxy.Cert, error) {
+	clientCert, err := tls.X509KeyPair([]byte(l.certificate), []byte(l.privKey))
+	if err != nil {
+		return nil, err
+	}
+
+	caCert, err := parseCert(l.certChain)
+	if err != nil {
+		return nil, err
+	}
+
+	return &proxy.Cert{
+		ClientCert: clientCert,
+		CACert:     caCert,
+		RemoteAddr: l.remoteAddr,
+	}, nil
+}
+
 func logHandler(l *zap.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
@@ -171,4 +220,12 @@ func logHandler(l *zap.Logger) func(http.Handler) http.Handler {
 		}
 		return http.HandlerFunc(fn)
 	}
+}
+
+func parseCert(pemCert string) (*x509.Certificate, error) {
+	bl, _ := pem.Decode([]byte(pemCert))
+	if bl == nil {
+		return nil, errors.New("invalid PEM: " + pemCert)
+	}
+	return x509.ParseCertificate(bl.Bytes)
 }

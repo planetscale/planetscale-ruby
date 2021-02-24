@@ -20,7 +20,7 @@ func startfromenv(org, database, branch *C.char) int {
 		return 1
 	}
 
-	return startproxy(client, org, database, branch)
+	return startproxy(org, database, branch, withClient(client))
 }
 
 //export startfromtoken
@@ -30,11 +30,23 @@ func startfromtoken(tokenName, token, org, database, branch *C.char) int {
 		return 1
 	}
 
-	return startproxy(client, org, database, branch)
+	return startproxy(org, database, branch, withClient(client))
 }
 
-func startproxy(ps *planetscale.Client, org, database, branch *C.char) int {
-	cntrlr, err := newController(C.GoString(org), C.GoString(database), C.GoString(branch), withClient(ps))
+//export startfromstatic
+func startfromstatic(org, database, branch, privKey, cert, chain, addr *C.char) int {
+	certSource := &localCertSource{
+		privKey:     C.GoString(privKey),
+		certificate: C.GoString(cert),
+		certChain:   C.GoString(chain),
+		remoteAddr:  C.GoString(addr),
+	}
+
+	return startproxy(org, database, branch, withLocalCertSource(certSource))
+}
+
+func startproxy(org, database, branch *C.char, opts ...controllerOpt) int {
+	cntrlr, err := newController(C.GoString(org), C.GoString(database), C.GoString(branch), opts...)
 	if err != nil {
 		return 2
 	}
