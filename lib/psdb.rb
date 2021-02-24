@@ -21,13 +21,15 @@ module PSDB
   class Proxy
     AUTH_SERVICE_TOKEN = 1 # Use Service Tokens for Auth
     AUTH_PSCALE = 2 # Use externally configured `pscale` auth & org config
+    AUTH_STATIC = 3 # Use a locally provided certificate & password
     CONTROL_URL = 'http://127.0.0.1:6060'
 
     extend FFI::Library
     ffi_lib File.expand_path("../../proxy/psdb-#{Gem::Platform.local.os}.so", __FILE__)
     attach_function :startfromenv, %i[string string string], :int
     attach_function :startfromtoken, %i[string string string string string], :int
-
+    attach_function :startfromstatic, %i[string string string string string string string], :int
+  
     def initialize(auth_method: AUTH_SERVICE_TOKEN, **kwargs)
       @auth_method = auth_method
 
@@ -41,21 +43,39 @@ module PSDB
       @token = kwargs[:token] || ENV['PSDB_TOKEN']
 
       raise ArgumentError, 'missing configured service token auth' if token_auth? && [@token_name, @token].any?(&:nil?)
+
+      @password = kwargs[:database_password]
+      @priv_key = kwargs[:private_key]
+      @cert_chain = kwargs[:cert_chain]
+      @remote_addr = kwargs[:remote_addr]
+      @certificate = kwargs[:certificate]
+
+      if local_auth? && [@password, @priv_key, @certificate, @cert_chain, @remote_adr].any?(&:nil?)
+        raise ArgumentError, 'missing configuration options for auth' 
+      end
     end
 
     def database_password
+      return @password if env_local?
       Net::HTTP.get(URI("#{CONTROL_URL}/password"))
     end
 
     def start
-      if env_auth?
+      case @auth_method
+      when AUTH_PSCALE
         startfromenv(@org, @db, @branch)
-      else
+      when AUTH_SERVICE_TOKEN
         startfromtoken(@token_name, @token, @org, @db, @branch)
+      when AUTH_STATIC
+        startfromstatic(@org, @db, @branch, @priv_key, @certificate, @cert_chain, @remote_addr)
       end
     end
 
     private
+
+    def local_auth?
+      @auth_method == AUTH_STATIC
+    end
 
     def env_auth?
       @auth_method == AUTH_PSCALE
