@@ -68,7 +68,7 @@ func newController(org, database, branch string, opts ...controllerOpt) (*contro
 func (c *controller) start() error {
 	opts := proxy.Options{
 		CertSource: c.certSrc,
-		LocalAddr:  "127.0.0.1:3307",
+		LocalAddr:  "127.0.0.1:3305", // todo(nickvanw): Configurable. Unix socket.
 		Instance:   fmt.Sprintf("%s/%s/%s", c.org, c.db, c.branch),
 		Logger:     c.logger,
 	}
