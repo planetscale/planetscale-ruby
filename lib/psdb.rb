@@ -6,8 +6,8 @@ require 'ffi'
 module PSDB
   class <<self
     attr_reader :config, :inject
-  
-    def start(auth_method: AUTH_PSCALE, **kwargs)
+
+    def start(auth_method: Proxy::AUTH_PSCALE, **kwargs)
       @proxy = PSDB::Proxy.new(auth_method: auth_method, **kwargs)
       @proxy.start
       @config = true
@@ -29,12 +29,18 @@ module PSDB
     attach_function :startfromenv, %i[string string string], :int
     attach_function :startfromtoken, %i[string string string string string], :int
     attach_function :startfromstatic, %i[string string string string string string string], :int
-  
+
     def initialize(auth_method: AUTH_SERVICE_TOKEN, **kwargs)
       @auth_method = auth_method
 
       @db = kwargs[:db] || ENV['PSDB_DB']
-      @branch = kwargs[:branch] || ENV['PSDB_DB_BRANCH']
+
+      default_file = File.join(Rails.root, '.psdb') if defined?(Rails.root)
+
+      @branch_file = kwargs[:branch_file] || ENV['PSDB_DB_BRANCH_FILE'] || default_file
+      @branch_name = kwargs[:branch] || ENV['PSDB_DB_BRANCH']
+      @branch = lookup_branch
+
       @org = kwargs[:org] || ENV['PSDB_ORG']
 
       raise ArgumentError, 'missing required configuration variables' if [@db, @branch, @org].any?(&:nil?)
@@ -51,12 +57,13 @@ module PSDB
       @certificate = kwargs[:certificate]
 
       if local_auth? && [@password, @priv_key, @certificate, @cert_chain, @remote_addr].any?(&:nil?)
-        raise ArgumentError, 'missing configuration options for auth' 
+        raise ArgumentError, 'missing configuration options for auth'
       end
     end
 
     def database_password
       return @password if local_auth?
+
       Net::HTTP.get(URI("#{CONTROL_URL}/password"))
     end
 
@@ -72,6 +79,14 @@ module PSDB
     end
 
     private
+
+    def lookup_branch
+      return @branch_name if @branch_name
+      return nil unless File.exist?(@branch_file)
+
+      psdb_config = YAML.safe_load(File.read(@branch_file))
+      psdb_config['branch']
+    end
 
     def local_auth?
       @auth_method == AUTH_STATIC
