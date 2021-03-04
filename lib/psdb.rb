@@ -33,13 +33,15 @@ module PSDB
     def initialize(auth_method: AUTH_SERVICE_TOKEN, **kwargs)
       @auth_method = auth_method
 
-      @db = kwargs[:db] || ENV['PSDB_DB']
-
       default_file = File.join(Rails.root, '.psdb') if defined?(Rails.root)
 
-      @branch_file = kwargs[:branch_file] || ENV['PSDB_DB_BRANCH_FILE'] || default_file
+      @cfg_file = kwargs[:cfg_file] || ENV['PSDB_DB_CONFIG'] || default_file
+
       @branch_name = kwargs[:branch] || ENV['PSDB_DB_BRANCH']
       @branch = lookup_branch
+
+      @db_name = kwargs[:db] || ENV['PSDB_DB']
+      @db = lookup_database
 
       @org = kwargs[:org] || ENV['PSDB_ORG']
 
@@ -82,10 +84,20 @@ module PSDB
 
     def lookup_branch
       return @branch_name if @branch_name
-      return nil unless File.exist?(@branch_file)
+      return nil unless File.exist?(@cfg_file)
 
-      psdb_config = YAML.safe_load(File.read(@branch_file))
-      psdb_config['branch']
+      cfg_file['branch']
+    end
+
+    def lookup_database
+      return @db_name if @db_name
+      return nil unless File.exist?(@cfg_file)
+
+      cfg_file['database']
+    end
+
+    def cfg_file
+      @cfg ||= YAML.safe_load(File.read(@cfg_file))
     end
 
     def local_auth?
