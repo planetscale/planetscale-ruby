@@ -33,7 +33,7 @@ module PSDB
     def initialize(auth_method: AUTH_SERVICE_TOKEN, **kwargs)
       @auth_method = auth_method
 
-      default_file = File.join(Rails.root, '.psdb') if defined?(Rails.root)
+      default_file = File.join(Rails.root, '.pscale') if defined?(Rails.root)
 
       @cfg_file = kwargs[:cfg_file] || ENV['PSDB_DB_CONFIG'] || default_file
 
