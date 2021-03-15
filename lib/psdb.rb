@@ -6,8 +6,8 @@ require 'ffi'
 module PSDB
   class <<self
     attr_reader :config, :inject
-  
-    def start(auth_method: AUTH_PSCALE, **kwargs)
+
+    def start(auth_method: Proxy::AUTH_PSCALE, **kwargs)
       @proxy = PSDB::Proxy.new(auth_method: auth_method, **kwargs)
       @proxy.start
       @config = true
@@ -29,12 +29,20 @@ module PSDB
     attach_function :startfromenv, %i[string string string], :int
     attach_function :startfromtoken, %i[string string string string string], :int
     attach_function :startfromstatic, %i[string string string string string string string], :int
-  
+
     def initialize(auth_method: AUTH_SERVICE_TOKEN, **kwargs)
       @auth_method = auth_method
 
-      @db = kwargs[:db] || ENV['PSDB_DB']
-      @branch = kwargs[:branch] || ENV['PSDB_DB_BRANCH']
+      default_file = File.join(Rails.root, '.pscale') if defined?(Rails.root)
+
+      @cfg_file = kwargs[:cfg_file] || ENV['PSDB_DB_CONFIG'] || default_file
+
+      @branch_name = kwargs[:branch] || ENV['PSDB_DB_BRANCH']
+      @branch = lookup_branch
+
+      @db_name = kwargs[:db] || ENV['PSDB_DB']
+      @db = lookup_database
+
       @org = kwargs[:org] || ENV['PSDB_ORG']
 
       raise ArgumentError, 'missing required configuration variables' if [@db, @branch, @org].any?(&:nil?)
@@ -51,12 +59,13 @@ module PSDB
       @certificate = kwargs[:certificate]
 
       if local_auth? && [@password, @priv_key, @certificate, @cert_chain, @remote_addr].any?(&:nil?)
-        raise ArgumentError, 'missing configuration options for auth' 
+        raise ArgumentError, 'missing configuration options for auth'
       end
     end
 
     def database_password
       return @password if local_auth?
+
       Net::HTTP.get(URI("#{CONTROL_URL}/password"))
     end
 
@@ -72,6 +81,24 @@ module PSDB
     end
 
     private
+
+    def lookup_branch
+      return @branch_name if @branch_name
+      return nil unless File.exist?(@cfg_file)
+
+      cfg_file['branch']
+    end
+
+    def lookup_database
+      return @db_name if @db_name
+      return nil unless File.exist?(@cfg_file)
+
+      cfg_file['database']
+    end
+
+    def cfg_file
+      @cfg ||= YAML.safe_load(File.read(@cfg_file))
+    end
 
     def local_auth?
       @auth_method == AUTH_STATIC

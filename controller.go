@@ -73,7 +73,7 @@ func (c *controller) start() error {
 		Logger:     c.logger,
 	}
 
-	if opts.CertSource == nil {
+	if c.certSrc == nil {
 		opts.CertSource = newRemoteCertSource(c.client)
 	}
 
