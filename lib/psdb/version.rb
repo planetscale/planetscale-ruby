@@ -2,5 +2,5 @@
 
 module PSDB
   TAG = ENV.fetch("SHORT_SHA", "x")
-  VERSION = '0.5.5' + TAG
+  VERSION = '0.5.5.' + TAG
 end
