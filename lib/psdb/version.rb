@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
 module PSDB
-  VERSION = '0.5.5'
+  TAG = ENV.fetch("SHORT_SHA", "x")
+  VERSION = '0.5.5' + TAG
 end
