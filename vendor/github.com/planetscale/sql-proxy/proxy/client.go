@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -38,6 +39,11 @@ type CertSource interface {
 // localhost port and tunneling them securely over a TLS connection to a remote
 // database instance defined by its PlanetScale unique branch identifier.
 type Client struct {
+	// connectionsCounter is used to enforce the optional maxConnections limit
+	// NOTE: don't move this field, as we need to make sure the fields are
+	// 64-bit aligned
+	connectionsCounter uint64
+
 	remoteAddr     string
 	localAddr      string
 	instance       string
@@ -46,12 +52,13 @@ type Client struct {
 
 	log *zap.Logger
 
-	// connectionsCounter is used to enforce the optional maxConnections limit
-	connectionsCounter uint64
-
 	// configCache contains the TLS certificate chache for each indiviual
 	// database
 	configCache *tlsCache
+
+	listener net.Listener
+	// done is closed after a successfull net.Listen bind.
+	done chan struct{}
 }
 
 // Options are the options for creating a new Client.
@@ -89,6 +96,7 @@ func NewClient(opts Options) (*Client, error) {
 		remoteAddr:  opts.RemoteAddr,
 		instance:    opts.Instance,
 		configCache: newtlsCache(),
+		done:        make(chan struct{}),
 	}
 
 	if opts.Logger != nil {
@@ -129,7 +137,22 @@ func (c *Client) Run(ctx context.Context) error {
 	}
 	defer c.log.Sync() // nolint: errcheck
 
+	c.listener = l
+	close(c.done)
+
 	return c.run(ctx, l)
+}
+
+// LocalAddr returns the address of the local listener. This is by default
+// blocking and will only return if the proxy is invoked with the Run() method.
+func (c *Client) LocalAddr() (net.Addr, error) {
+	<-c.done
+
+	if c.listener == nil {
+		return nil, errors.New("listener is not set")
+
+	}
+	return c.listener.Addr(), nil
 }
 
 func (c *Client) getListener() (net.Listener, error) {
