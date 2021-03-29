@@ -7,7 +7,7 @@ module PSDB
   class <<self
     attr_reader :config, :inject
 
-    def start(auth_method: Proxy::AUTH_PSCALE, **kwargs)
+    def start(auth_method: Proxy::AUTH_AUTO, **kwargs)
       @proxy = PSDB::Proxy.new(auth_method: auth_method, **kwargs)
       @proxy.start
       @config = true
@@ -22,6 +22,7 @@ module PSDB
     AUTH_SERVICE_TOKEN = 1 # Use Service Tokens for Auth
     AUTH_PSCALE = 2 # Use externally configured `pscale` auth & org config
     AUTH_STATIC = 3 # Use a locally provided certificate & password
+    AUTH_AUTO = 4 # Default. Let the Gem figure it out
     CONTROL_URL = 'http://127.0.0.1:6060'
 
     extend FFI::Library
@@ -30,7 +31,7 @@ module PSDB
     attach_function :startfromtoken, %i[string string string string string], :int
     attach_function :startfromstatic, %i[string string string string string string string], :int
 
-    def initialize(auth_method: AUTH_SERVICE_TOKEN, **kwargs)
+    def initialize(auth_method: AUTH_AUTO, **kwargs)
       @auth_method = auth_method
 
       default_file = File.join(Rails.root, '.pscale') if defined?(Rails.root)
@@ -49,6 +50,10 @@ module PSDB
 
       @token_name = kwargs[:token_id] || ENV['PSDB_TOKEN_NAME']
       @token = kwargs[:token] || ENV['PSDB_TOKEN']
+
+      if @token && @token_name && auth_auto?
+        @auth_method = AUTH_SERVICE_TOKEN
+      end
 
       raise ArgumentError, 'missing configured service token auth' if token_auth? && [@token_name, @token].any?(&:nil?)
 
@@ -72,6 +77,8 @@ module PSDB
     def start
       case @auth_method
       when AUTH_PSCALE
+        startfromenv(@org, @db, @branch)
+      when AUTH_AUTH
         startfromenv(@org, @db, @branch)
       when AUTH_SERVICE_TOKEN
         startfromtoken(@token_name, @token, @org, @db, @branch)
@@ -110,6 +117,10 @@ module PSDB
 
     def token_auth?
       @auth_method == AUTH_SERVICE_TOKEN
+    end
+
+    def auto_auth?
+      @auth_method == AUTH_AUTO
     end
   end
 end
