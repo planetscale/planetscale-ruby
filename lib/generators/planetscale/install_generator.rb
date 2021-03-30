@@ -18,5 +18,21 @@ require_relative "psdb"
       RUBY
       end
     end
+
+    def print_database_yaml
+      d =
+      <<~EOS
+      development:
+        <<: *default
+        username: root
+        host: 127.0.0.1
+        port: 3305
+        password: <%= PSDB.database_password rescue nil %>
+        database: <db_name>
+      EOS
+
+      puts "Installed!\nConfigure your database.yaml like so:\n"
+      puts d
+    end
   end 
 end
