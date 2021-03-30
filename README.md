@@ -22,7 +22,7 @@ Or install it yourself as:
 
 This Gem exposes one class, and a singleton of that for configuring a 'global' instance of the proxy. This is recommended for most users who do not need to connect to multiple databases simultaneously. There are many ways to configure the connection, and depend on where you're connecting from. For local development:
 
-Run the built-in generator to setup the basic configuratino: `rails generate planetscale:install`
+Run the built-in generator to setup the basic configuration: `rails generate planetscale:install`
 
 Now, point your `database.yaml` at the proxy the Gem will start, which will listen on `127.0.0.1:3305`. This should look like:
 

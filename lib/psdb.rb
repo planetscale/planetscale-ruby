@@ -78,7 +78,7 @@ module PSDB
       case @auth_method
       when AUTH_PSCALE
         startfromenv(@org, @db, @branch)
-      when AUTH_AUTH
+      when AUTH_AUTO
         startfromenv(@org, @db, @branch)
       when AUTH_SERVICE_TOKEN
         startfromtoken(@token_name, @token, @org, @db, @branch)
