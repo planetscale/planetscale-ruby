@@ -1,0 +1,24 @@
+name: Ruby Gem
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]  
+
+jobs:
+  build:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Ruby 2.7
+      uses: actions/setup-ruby@v1
+      with:
+        ruby-version: 2.7.x
+
+    - name: Publish to GPR
+      run: |
+        bundle install
+        bundle exec rake test
