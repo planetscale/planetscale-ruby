@@ -128,5 +128,3 @@ module PSDB
     end
   end
 end
-
-require 'psdb/railtie' if defined?(Rails::Railtie)

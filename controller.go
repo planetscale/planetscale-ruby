@@ -109,7 +109,7 @@ func (c *controller) dbPass(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(status.Password))
+	w.Write([]byte(status.Credentials.Password))
 }
 
 func withClient(ps *planetscale.Client) controllerOpt {
