@@ -10,15 +10,14 @@ jobs:
   build:
     name: Run Tests
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby 2.7
       uses: actions/setup-ruby@v1
       with:
         ruby-version: 2.7.x
-
-    - name: Publish to GPR
+    - name: Bundle and Test
       run: |
+        gem install bundler
         bundle install
         bundle exec rake test
