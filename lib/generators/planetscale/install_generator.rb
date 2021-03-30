@@ -31,8 +31,14 @@ require_relative "psdb"
         database: <db_name>
       EOS
 
-      puts "Installed!\nConfigure your database.yaml like so:\n"
+      puts "Installed!\n\nConfigure your database.yaml like so:\n".bold
       puts d
+      puts "\nswitch to your PlanetScale branch:\n".bold
+      puts "pscale branch switch main --database <db_name>\n"
     end
   end 
+end
+
+class String
+  def bold;           "\e[1m#{self}\e[22m" end
 end
