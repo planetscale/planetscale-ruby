@@ -6,24 +6,27 @@ class Planetscale
 
     def read_config
       @database = "<db_name>"
-      file_path = File.join(Rails.root, '.pscale')
+      file_path = File.join(Rails.root, PSDB::Proxy::PSCALE_FILE)
       return unless File.exist?(file_path)
 
       data = YAML.safe_load(File.read(file_path))
       @database = data['database']
+      @org = data['org']
     end
 
     def check_org
-      if options[:organization].empty?
+      if options[:organization].empty? && @org.nil?
         puts "Usage: bundle exec rails g planetscale:install --organization ORG_NAME"
         abort
       end
+
+      @org ||= options[:organization]
     end 
 
     def create_psdb_configuration
-      create_file "config/psdb.rb", "PSDB.start(org: '#{options[:organization]}')"
-      inject_into_file "config/environment.rb", after: "require_relative \"application\"\n" do <<-'RUBY'
-require_relative "psdb"
+      create_file "config/psdb.rb", "PSDB.start(org: '#{@org}')\n"
+      inject_into_file "config/environment.rb", after: "require_relative \"application\"\n" do <<~'RUBY'
+        require_relative "psdb"
       RUBY
       end
     end

@@ -24,7 +24,7 @@ module PSDB
     AUTH_STATIC = 3 # Use a locally provided certificate & password
     AUTH_AUTO = 4 # Default. Let the Gem figure it out
     CONTROL_URL = 'http://127.0.0.1:6060'
-    PSCALE_FILE = '.pscale'
+    PSCALE_FILE = '.pscale.yml'
 
     extend FFI::Library
     ffi_lib File.expand_path("../../proxy/psdb-#{Gem::Platform.local.os}.so", __FILE__)
@@ -36,9 +36,9 @@ module PSDB
       @auth_method = auth_method
 
       default_file = if defined?(Rails.root)
-        File.join(Rails.root, '.pscale') if defined?(Rails.root)
+        File.join(Rails.root, PSCALE_FILE) if defined?(Rails.root)
       else
-        ".pscale"
+        PSCALE_FILE
       end
 
       @cfg_file = kwargs[:cfg_file] || ENV['PSDB_DB_CONFIG'] || default_file
@@ -49,7 +49,8 @@ module PSDB
       @db_name = kwargs[:db] || ENV['PSDB_DB']
       @db = lookup_database
 
-      @org = kwargs[:org] || ENV['PSDB_ORG']
+      @org_name = kwargs[:org] || ENV['PSDB_ORG']
+      @org = lookup_org
 
       raise ArgumentError, 'missing required configuration variables' if [@db, @branch, @org].any?(&:nil?)
 
@@ -106,6 +107,13 @@ module PSDB
       return nil unless File.exist?(@cfg_file)
 
       cfg_file['database']
+    end
+
+    def lookup_org
+      return @org_name if @org_name
+      return nil unless File.exist?(@cfg_file)
+
+      cfg_file['org']
     end
 
     def cfg_file
