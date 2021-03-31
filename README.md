@@ -20,41 +20,31 @@ Or install it yourself as:
 
 ## Usage
 
-This Gem exposes one class, and a singleton of that for configuring a 'global' instance of the proxy. This is recommended for most users who do not need to connect to multiple databases simultaneously. There are many ways to configure the connection, and depend on where you're connecting from. For local development:
+This Gem exposes one class, and a singleton of that for configuring a 'global' instance of the proxy. This is recommended for most users who do not need to connect to multiple databases simultaneously. There are many ways to configure the connection, for local development we recommend:
 
-In your app, create a configuration file: `config/psdb.rb` that looks like:
+The Gem will pick up configuration created by the CLI, to point it to your database:
 
-```ruby
-PSDB.start(org: 'org_name')
+```
+~> pscale branch switch main --database <db_name>
+Finding branch main on database <db_name>
+Successfully switched to branch main on database <db_name>
 ```
 
-Where `org_name` is the name of the PlanetScale organization your database is in. 
+Now, run the built-in generator to setup the basic configuration: `rails generate planetscale:install --organization ORG_NAME`
 
-In `config/environment.rb`, include it up top:
-
-```ruby
-require_relative "psdb"
-```
-
-Now, point your `database.yaml` at the Proxy the Gem will start:
+Finally, point your `database.yml` at the proxy the Gem will start, which will listen on `127.0.0.1:3305`. This will look something like:
 
 ```yaml
 development:
   <<: *default
+  username: root
+  host: 127.0.0.1
   port: 3305
   password: <%= PSDB.database_password rescue nil %>
   database: <db_name>
 ```
 
-The Gem is able to pick up the configuration created by the CLI, so all you need to do in the root of your Rails project is:
-
-```
-~> pscale branch switch main --database <db_name>
-Finding branch main on database <db_name>
-Successfully switched to branch main on database main
-```
-
-Now, your Rails App should boot the proxy as the app is starting, and connect to the `main` branch on your DB. 
+Now, your Rails app will boot the proxy as the app is starting, and connect to the `main` branch on your DB. 
 
 ### Service Token Authentication
 
@@ -74,27 +64,12 @@ To use this Gem in 'production', we'll start by creating a PlanetScale Service T
   testdb     connect_production_branch
 ```
 
-Back in your app, modify `config/psdb.rb` to look like:
-
-```ruby
-PSDB.start(auth_method: PSDB::Proxy::AUTH_SERVICE_TOKEN, org: 'org_name', database: 'db_name', branch: 'main')
-```
-
-To support both development and production, you can do something like:
-
-```ruby
-if Rails.env.production?
-  PSDB.start(auth_method: PSDB::Proxy::AUTH_SERVICE_TOKEN, org: 'org_name', database: 'db_name', branch: 'main')
-else
-  PSDB.start(org: 'org_name')
-end
-```
-
-This will ensure that your application uses your local configuration in development, and the tighly scoped service token in production.
-
-Deploy your application with the following environment variables:
+To configure your application in production, you'll need to feed it all of the right information via environment variables:
 
 ```
+PSDB_ORG=<org_name>
+PSDB_DB=<db_name>
+PSDB_DB_BRANCH=main
 PSDB_TOKEN_NAME=0sph6kvz5bxi
 PSDB_TOKEN=<redacted>
 ```
