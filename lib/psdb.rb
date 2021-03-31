@@ -111,7 +111,7 @@ module PSDB
 
     def lookup_org
       return @org_name if @org_name
-      return nil unless File.exist(@cfg_file)
+      return nil unless File.exist?(@cfg_file)
 
       cfg_file['org']
     end
