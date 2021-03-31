@@ -24,6 +24,7 @@ module PSDB
     AUTH_STATIC = 3 # Use a locally provided certificate & password
     AUTH_AUTO = 4 # Default. Let the Gem figure it out
     CONTROL_URL = 'http://127.0.0.1:6060'
+    PSCALE_FILE = '.pscale'
 
     extend FFI::Library
     ffi_lib File.expand_path("../../proxy/psdb-#{Gem::Platform.local.os}.so", __FILE__)

@@ -20,11 +20,19 @@ Or install it yourself as:
 
 ## Usage
 
-This Gem exposes one class, and a singleton of that for configuring a 'global' instance of the proxy. This is recommended for most users who do not need to connect to multiple databases simultaneously. There are many ways to configure the connection, and depend on where you're connecting from. For local development:
+This Gem exposes one class, and a singleton of that for configuring a 'global' instance of the proxy. This is recommended for most users who do not need to connect to multiple databases simultaneously. There are many ways to configure the connection, for local development we recommend:
 
-Run the built-in generator to setup the basic configuration: `rails generate planetscale:install --organization ORG_NAME`
+The Gem will pick up configuration created by the CLI, to point it to your database:
 
-Now, point your `database.yaml` at the proxy the Gem will start, which will listen on `127.0.0.1:3305`. This should look like:
+```
+~> pscale branch switch main --database <db_name>
+Finding branch main on database <db_name>
+Successfully switched to branch main on database <db_name>
+```
+
+Now, run the built-in generator to setup the basic configuration: `rails generate planetscale:install --organization ORG_NAME`
+
+Finally, point your `database.yaml` at the proxy the Gem will start, which will listen on `127.0.0.1:3305`. This will look something like:
 
 ```yaml
 development:
@@ -34,15 +42,6 @@ development:
   port: 3305
   password: <%= PSDB.database_password rescue nil %>
   database: <db_name>
-```
-
-
-The Gem will pick up the configuration created by the CLI, to point it to your database:
-
-```
-~> pscale branch switch main --database <db_name>
-Finding branch main on database <db_name>
-Successfully switched to branch main on database <db_name>
 ```
 
 Now, your Rails app should boot the proxy as the app is starting, and connect to the `main` branch on your DB. 
