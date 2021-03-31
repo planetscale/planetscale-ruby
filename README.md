@@ -32,7 +32,7 @@ Successfully switched to branch main on database <db_name>
 
 Now, run the built-in generator to setup the basic configuration: `rails generate planetscale:install --organization ORG_NAME`
 
-Finally, point your `database.yaml` at the proxy the Gem will start, which will listen on `127.0.0.1:3305`. This will look something like:
+Finally, point your `database.yml` at the proxy the Gem will start, which will listen on `127.0.0.1:3305`. This will look something like:
 
 ```yaml
 development:
@@ -44,7 +44,7 @@ development:
   database: <db_name>
 ```
 
-Now, your Rails app should boot the proxy as the app is starting, and connect to the `main` branch on your DB. 
+Now, your Rails app will boot the proxy as the app is starting, and connect to the `main` branch on your DB. 
 
 ### Service Token Authentication
 
