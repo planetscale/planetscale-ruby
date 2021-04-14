@@ -79,17 +79,11 @@ func (c *controller) start() error {
 	}
 
 	p, err := proxy.NewClient(opts)
-	fmt.Println(err)
 	if err != nil {
 		return err
 	}
 
-	go func() {
-		err := p.Run(context.Background())
-		if err != nil {
-			c.logger.Error(err.Error())
-		}
-	}()
+	go p.Run(context.Background())
 	go http.ListenAndServe(c.listenAddr, logHandler(c.logger)(c.r))
 	return nil
 }
