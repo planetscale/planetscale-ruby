@@ -70,7 +70,7 @@ extern "C" {
 
 extern GoInt startfromenv(char* org, char* database, char* branch);
 extern GoInt startfromtoken(char* tokenName, char* token, char* org, char* database, char* branch);
-extern GoInt startfromstatic(char* org, char* database, char* branch, char* privKey, char* cert, char* chain, char* addr);
+extern GoInt startfromstatic(char* org, char* database, char* branch, char* privKey, char* cert, char* chain, char* addr, char* port);
 
 #ifdef __cplusplus
 }
