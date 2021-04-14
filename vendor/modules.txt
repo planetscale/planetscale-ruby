@@ -1,7 +1,8 @@
 # github.com/armon/circbuf v0.0.0-20190214190532-5111143e8da2
 ## explicit
 github.com/armon/circbuf
-# github.com/golang/protobuf v1.4.3
+# github.com/golang/protobuf v1.5.2
+## explicit
 github.com/golang/protobuf/proto
 # github.com/gorilla/mux v1.8.0
 ## explicit
@@ -13,10 +14,10 @@ github.com/hashicorp/go-cleanhttp
 github.com/mitchellh/go-homedir
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/planetscale/planetscale-go v0.12.0
+# github.com/planetscale/planetscale-go v0.17.1-0.20210412184314-fa1ee68838c4
 ## explicit
 github.com/planetscale/planetscale-go/planetscale
-# github.com/planetscale/sql-proxy v0.2.0
+# github.com/planetscale/sql-proxy v0.2.1-0.20210412205027-af93762c74b9
 ## explicit
 github.com/planetscale/sql-proxy/proxy
 # go.uber.org/atomic v1.7.0
@@ -31,10 +32,11 @@ go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
-# golang.org/x/net v0.0.0-20210119194325-5f4716e94777
+# golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1
+## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
-# golang.org/x/oauth2 v0.0.0-20210218201342-f1459370232a
+# golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78
 ## explicit
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
@@ -47,7 +49,7 @@ google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/protobuf v1.25.0
+# google.golang.org/protobuf v1.26.0
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -58,19 +60,20 @@ google.golang.org/protobuf/internal/encoding/messageset
 google.golang.org/protobuf/internal/encoding/tag
 google.golang.org/protobuf/internal/encoding/text
 google.golang.org/protobuf/internal/errors
-google.golang.org/protobuf/internal/fieldsort
 google.golang.org/protobuf/internal/filedesc
 google.golang.org/protobuf/internal/filetype
 google.golang.org/protobuf/internal/flags
 google.golang.org/protobuf/internal/genid
 google.golang.org/protobuf/internal/impl
-google.golang.org/protobuf/internal/mapsort
+google.golang.org/protobuf/internal/order
 google.golang.org/protobuf/internal/pragma
 google.golang.org/protobuf/internal/set
 google.golang.org/protobuf/internal/strs
 google.golang.org/protobuf/internal/version
 google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protodesc
 google.golang.org/protobuf/reflect/protoreflect
 google.golang.org/protobuf/reflect/protoregistry
 google.golang.org/protobuf/runtime/protoiface
 google.golang.org/protobuf/runtime/protoimpl
+google.golang.org/protobuf/types/descriptorpb

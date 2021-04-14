@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 
 	_ "net/http/pprof"
 
@@ -78,11 +79,17 @@ func (c *controller) start() error {
 	}
 
 	p, err := proxy.NewClient(opts)
+	fmt.Println(err)
 	if err != nil {
-		return nil
+		return err
 	}
 
-	go p.Run(context.Background())
+	go func() {
+		err := p.Run(context.Background())
+		if err != nil {
+			c.logger.Error(err.Error())
+		}
+	}()
 	go http.ListenAndServe(c.listenAddr, logHandler(c.logger)(c.r))
 	return nil
 }
@@ -189,6 +196,7 @@ type localCertSource struct {
 	certificate string
 	certChain   string
 	remoteAddr  string
+	port        string
 }
 
 func (l *localCertSource) Cert(ctx context.Context, org, db, branch string) (*proxy.Cert, error) {
@@ -202,10 +210,18 @@ func (l *localCertSource) Cert(ctx context.Context, org, db, branch string) (*pr
 		return nil, err
 	}
 
+	port, err := strconv.Atoi(l.port)
+	if err != nil {
+		return nil, err
+	}
+
 	return &proxy.Cert{
 		ClientCert: clientCert,
 		CACert:     caCert,
 		RemoteAddr: l.remoteAddr,
+		Ports: proxy.RemotePorts{
+			Proxy: port,
+		},
 	}, nil
 }
 

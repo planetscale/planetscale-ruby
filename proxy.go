@@ -34,12 +34,13 @@ func startfromtoken(tokenName, token, org, database, branch *C.char) int {
 }
 
 //export startfromstatic
-func startfromstatic(org, database, branch, privKey, cert, chain, addr *C.char) int {
+func startfromstatic(org, database, branch, privKey, cert, chain, addr, port *C.char) int {
 	certSource := &localCertSource{
 		privKey:     C.GoString(privKey),
 		certificate: C.GoString(cert),
 		certChain:   C.GoString(chain),
 		remoteAddr:  C.GoString(addr),
+		port:        C.GoString(port),
 	}
 
 	return startproxy(org, database, branch, withLocalCertSource(certSource))
