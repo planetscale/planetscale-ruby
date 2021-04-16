@@ -41,17 +41,14 @@ class Planetscale
         username: root
         host: 127.0.0.1
         port: 3305
-        password: <%= PSDB.database_password rescue nil %>
         database: #{@database}
       EOS
 
+
+      db_url = "mysql2://root:@127.0.0.1:3305/#{@database}"
       puts "Installed!\n\nConfigure your database.yaml like so:\n".bold
       puts d
-
-      return unless @database == "<db_name>"
-
-      puts "\nswitch to your PlanetScale branch:\n".bold
-      puts "pscale branch switch main --database #{@database}\n"
+      puts "\nOr set DATABASE_URL=#{db_url}"
     end
   end 
 end

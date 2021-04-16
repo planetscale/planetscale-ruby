@@ -40,7 +40,6 @@ development:
   username: root
   host: 127.0.0.1
   port: 3305
-  password: <%= PSDB.database_password rescue nil %>
   database: <db_name>
 ```
 
