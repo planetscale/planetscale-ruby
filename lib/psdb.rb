@@ -2,7 +2,7 @@
 
 require 'psdb/version'
 require 'ffi'
-
+require 'pry'
 module PSDB
   class <<self
     attr_reader :config, :inject
@@ -30,7 +30,7 @@ module PSDB
     ffi_lib File.expand_path("../../proxy/psdb-#{Gem::Platform.local.os}.so", __FILE__)
     attach_function :startfromenv, %i[string string string], :int
     attach_function :startfromtoken, %i[string string string string string], :int
-    attach_function :startfromstatic, %i[string string string string string string string], :int
+    attach_function :startfromstatic, %i[string string string string string string string string], :int
 
     def initialize(auth_method: AUTH_AUTO, **kwargs)
       @auth_method = auth_method
@@ -68,8 +68,9 @@ module PSDB
       @cert_chain = kwargs[:cert_chain]
       @remote_addr = kwargs[:remote_addr]
       @certificate = kwargs[:certificate]
+      @port = kwargs[:port]
 
-      if local_auth? && [@password, @priv_key, @certificate, @cert_chain, @remote_addr].any?(&:nil?)
+      if local_auth? && [@priv_key, @certificate, @cert_chain, @remote_addr, @port].any?(&:nil?)
         raise ArgumentError, 'missing configuration options for auth'
       end
     end
@@ -89,7 +90,7 @@ module PSDB
       when AUTH_SERVICE_TOKEN
         startfromtoken(@token_name, @token, @org, @db, @branch)
       when AUTH_STATIC
-        startfromstatic(@org, @db, @branch, @priv_key, @certificate, @cert_chain, @remote_addr)
+        startfromstatic(@org, @db, @branch, @priv_key, @certificate, @cert_chain, @remote_addr, @port)
       end
     end
 
