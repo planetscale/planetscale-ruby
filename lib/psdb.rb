@@ -12,16 +12,12 @@ module PSDB
       @proxy.start
       @config = true
     end
-
-    def database_password
-      @proxy.database_password
-    end
   end
 
   class Proxy
     AUTH_SERVICE_TOKEN = 1 # Use Service Tokens for Auth
     AUTH_PSCALE = 2 # Use externally configured `pscale` auth & org config
-    AUTH_STATIC = 3 # Use a locally provided certificate & password
+    AUTH_STATIC = 3 # Use a locally provided certificate
     AUTH_AUTO = 4 # Default. Let the Gem figure it out
     CONTROL_URL = 'http://127.0.0.1:6060'
     PSCALE_FILE = '.pscale.yml'
@@ -63,7 +59,6 @@ module PSDB
 
       raise ArgumentError, 'missing configured service token auth' if token_auth? && [@token_name, @token].any?(&:nil?)
 
-      @password = kwargs[:database_password]
       @priv_key = kwargs[:private_key]
       @cert_chain = kwargs[:cert_chain]
       @remote_addr = kwargs[:remote_addr]
@@ -73,12 +68,6 @@ module PSDB
       if local_auth? && [@priv_key, @certificate, @cert_chain, @remote_addr, @port].any?(&:nil?)
         raise ArgumentError, 'missing configuration options for auth'
       end
-    end
-
-    def database_password
-      return @password if local_auth?
-
-      Net::HTTP.get(URI("#{CONTROL_URL}/password"))
     end
 
     def start
