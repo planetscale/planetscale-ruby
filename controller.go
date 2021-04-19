@@ -55,7 +55,6 @@ func newController(org, database, branch string, opts ...controllerOpt) (*contro
 
 	c.r.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 	c.r.HandleFunc("/logs", c.logDump)
-	c.r.HandleFunc("/password", c.dbPass)
 
 	for _, v := range opts {
 		if err := v(c); err != nil {
@@ -90,27 +89,6 @@ func (c *controller) start() error {
 
 func (c *controller) logDump(w http.ResponseWriter, r *http.Request) {
 	w.Write(c.logBuf.Bytes())
-}
-
-func (c *controller) dbPass(w http.ResponseWriter, r *http.Request) {
-	// If we've configured this with no client, we can't fetch the password
-	if c.client == nil {
-		w.WriteHeader(405)
-		return
-	}
-
-	status, err := c.client.DatabaseBranches.GetStatus(context.Background(), &planetscale.GetDatabaseBranchStatusRequest{
-		Organization: c.org,
-		Database:     c.db,
-		Branch:       c.branch,
-	})
-
-	if err != nil {
-		w.WriteHeader(500)
-		return
-	}
-
-	w.Write([]byte(status.Credentials.Password))
 }
 
 func withClient(ps *planetscale.Client) controllerOpt {
