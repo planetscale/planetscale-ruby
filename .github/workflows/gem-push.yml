@@ -27,7 +27,7 @@ jobs:
       run: go build -v -buildmode=c-shared -o proxy/psdb-darwin.so
 
     - name: Build shared library on Linux
-      run: docker run -ti --rm -v $(pwd):/psdb-ruby golang sh -c 'cd /psdb-ruby && go build -v -buildmode=c-shared -o proxy/psdb-linux.so'
+      run: docker run -v $(pwd):/psdb-ruby golang sh -c 'cd /psdb-ruby && go build -v -buildmode=c-shared -o proxy/psdb-linux.so'
 
     - name: Publish to GPR
       run: |
