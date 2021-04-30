@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	_ "net/http/pprof"
 
@@ -65,10 +66,10 @@ func newController(org, database, branch string, opts ...controllerOpt) (*contro
 	return c, nil
 }
 
-func (c *controller) start() error {
+func (c *controller) start() (string, error) {
 	opts := proxy.Options{
 		CertSource: c.certSrc,
-		LocalAddr:  "127.0.0.1:3305", // todo(nickvanw): Configurable. Unix socket.
+		LocalAddr:  "127.0.0.1:3305", // todo(nickvanw): Configurable
 		Instance:   fmt.Sprintf("%s/%s/%s", c.org, c.db, c.branch),
 		Logger:     c.logger,
 	}
@@ -79,12 +80,41 @@ func (c *controller) start() error {
 
 	p, err := proxy.NewClient(opts)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	go p.Run(context.Background())
-	go http.ListenAndServe(c.listenAddr, logHandler(c.logger)(c.r))
-	return nil
+	errs := make(chan error)
+	listener := make(chan string)
+	var listenAddr string
+
+	go func(errs chan error) {
+		err := p.Run(context.Background())
+		if err != nil {
+			c.logger.With(zap.String("error", err.Error())).Error("unable to start listener")
+			errs <- err
+		}
+	}(errs)
+
+	go func(errs chan error, addr chan string) {
+		listenAddr, err := p.LocalAddr()
+		if err != nil {
+			errs <- err
+			return
+		}
+		listener <- listenAddr.String()
+	}(errs, listener)
+
+	select {
+	case err := <-errs:
+		return "", err
+	case <-time.After(5 * time.Second):
+		return "", errors.New("timed out waiting for proxy listener")
+	case listenAddr = <-listener:
+	}
+
+	c.logger.With(zap.String("addr", listenAddr)).Debug("proxy started")
+
+	return listenAddr, nil
 }
 
 func (c *controller) logDump(w http.ResponseWriter, r *http.Request) {
