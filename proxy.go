@@ -14,27 +14,27 @@ import (
 const accessTokenDir string = "~/.config/planetscale"
 
 //export startfromenv
-func startfromenv(org, database, branch *C.char) int {
+func startfromenv(org, database, branch *C.char) (*C.char, *C.char) {
 	client, err := newClientFromEnv()
 	if err != nil {
-		return 1
+		return nil, nilOrError(err)
 	}
 
 	return startproxy(org, database, branch, withClient(client))
 }
 
 //export startfromtoken
-func startfromtoken(tokenName, token, org, database, branch *C.char) int {
+func startfromtoken(tokenName, token, org, database, branch *C.char) (*C.char, *C.char) {
 	client, err := newClientFromServiceToken(C.GoString(tokenName), C.GoString(token))
 	if err != nil {
-		return 1
+		return nil, nilOrError(err)
 	}
 
 	return startproxy(org, database, branch, withClient(client))
 }
 
 //export startfromstatic
-func startfromstatic(org, database, branch, privKey, cert, chain, addr, port *C.char) int {
+func startfromstatic(org, database, branch, privKey, cert, chain, addr, port *C.char) (*C.char, *C.char) {
 	certSource := &localCertSource{
 		privKey:     C.GoString(privKey),
 		certificate: C.GoString(cert),
@@ -46,14 +46,14 @@ func startfromstatic(org, database, branch, privKey, cert, chain, addr, port *C.
 	return startproxy(org, database, branch, withLocalCertSource(certSource))
 }
 
-func startproxy(org, database, branch *C.char, opts ...controllerOpt) int {
+func startproxy(org, database, branch *C.char, opts ...controllerOpt) (*C.char, *C.char) {
 	cntrlr, err := newController(C.GoString(org), C.GoString(database), C.GoString(branch), opts...)
 	if err != nil {
-		return 2
+		return nil, nilOrError(err)
 	}
 
-	cntrlr.start()
-	return 0
+	addr, err := cntrlr.start()
+	return C.CString(addr), nilOrError(err)
 }
 
 func newClientFromEnv() (*planetscale.Client, error) {
@@ -96,6 +96,14 @@ func accessToken() (string, error) {
 	}
 
 	return string(t), nil
+}
+
+func nilOrError(err error) *C.char {
+	if err == nil {
+		return nil
+	}
+
+	return C.CString(err.Error())
 }
 
 func main() {

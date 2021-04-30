@@ -5,12 +5,9 @@ require 'ffi'
 require 'pry'
 module PSDB
   class <<self
-    attr_reader :config, :inject
-
     def start(auth_method: Proxy::AUTH_AUTO, **kwargs)
       @proxy = PSDB::Proxy.new(auth_method: auth_method, **kwargs)
       @proxy.start
-      @config = true
     end
   end
 
@@ -19,14 +16,21 @@ module PSDB
     AUTH_PSCALE = 2 # Use externally configured `pscale` auth & org config
     AUTH_STATIC = 3 # Use a locally provided certificate
     AUTH_AUTO = 4 # Default. Let the Gem figure it out
-    CONTROL_URL = 'http://127.0.0.1:6060'
     PSCALE_FILE = '.pscale.yml'
 
+    class ProxyError < StandardError
+    end
+
     extend FFI::Library
+
+    class ProxyReturn < FFI::Struct
+      layout :r0, :pointer, :r1, :pointer
+    end
+
     ffi_lib File.expand_path("../../proxy/psdb-#{Gem::Platform.local.os}.so", __FILE__)
-    attach_function :startfromenv, %i[string string string], :int
-    attach_function :startfromtoken, %i[string string string string string], :int
-    attach_function :startfromstatic, %i[string string string string string string string string], :int
+    attach_function :startfromenv, %i[string string string], ProxyReturn.by_value
+    attach_function :startfromtoken, %i[string string string string string], ProxyReturn.by_value
+    attach_function :startfromstatic, %i[string string string string string string string string], ProxyReturn.by_value
 
     def initialize(auth_method: AUTH_AUTO, **kwargs)
       @auth_method = auth_method
@@ -71,7 +75,7 @@ module PSDB
     end
 
     def start
-      case @auth_method
+      ret = case @auth_method
       when AUTH_PSCALE
         startfromenv(@org, @db, @branch)
       when AUTH_AUTO
@@ -81,6 +85,8 @@ module PSDB
       when AUTH_STATIC
         startfromstatic(@org, @db, @branch, @priv_key, @certificate, @cert_chain, @remote_addr, @port)
       end
+      @err = ret[:r1].null? ? nil : ret[:r1].read_string
+      raise(ProxyError, @err) if @err
     end
 
     private
