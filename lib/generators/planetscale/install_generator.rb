@@ -6,7 +6,7 @@ class Planetscale
 
     def read_config
       @database = "<db_name>"
-      file_path = File.join(Rails.root, Planetscale::Proxy::PSCALE_FILE)
+      file_path = File.join(Rails.root, PlanetScale::Proxy::PSCALE_FILE)
       return unless File.exist?(file_path)
 
       data = YAML.safe_load(File.read(file_path))
