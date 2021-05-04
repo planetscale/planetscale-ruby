@@ -3,7 +3,8 @@
 require 'planetscale/version'
 require 'ffi'
 require 'pry'
-module Planetscale
+
+module PlanetScale
   class <<self
     def start(auth_method: Proxy::AUTH_AUTO, **kwargs)
       @proxy = Planetscale::Proxy.new(auth_method: auth_method, **kwargs)

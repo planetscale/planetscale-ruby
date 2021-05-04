@@ -6,7 +6,7 @@ require 'planetscale/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'planetscale'
-  spec.version       = Planetscale::VERSION
+  spec.version       = PlanetScale::VERSION
   spec.authors       = ['Nick Van Wiggeren']
   spec.email         = ['nick@planetscale.com']
 

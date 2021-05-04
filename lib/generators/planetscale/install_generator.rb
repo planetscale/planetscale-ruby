@@ -24,7 +24,7 @@ class Planetscale
     end 
 
     def create_planetscale_config
-      create_file "config/planetscale.rb", "Planetscale.start(org: '#{@org}')\n"
+      create_file "config/planetscale.rb", "PlanetScale.start(org: '#{@org}')\n"
       inject_into_file "config/environment.rb", after: "require_relative \"application\"\n" do <<~'RUBY'
         require_relative "planetscale"
       RUBY
