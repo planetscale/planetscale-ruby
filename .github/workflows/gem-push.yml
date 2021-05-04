@@ -24,10 +24,10 @@ jobs:
       run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV   
 
     - name: Build shared library on OS X
-      run: go build -v -buildmode=c-shared -o proxy/psdb-darwin.so
+      run: go build -v -buildmode=c-shared -o proxy/planetscale-darwin.so
 
     - name: Build shared library on Linux
-      run: docker run -v $(pwd):/psdb-ruby golang sh -c 'cd /psdb-ruby && go build -v -buildmode=c-shared -o proxy/psdb-linux.so'
+      run: docker run -v $(pwd):/planetscale-ruby golang sh -c 'cd /planetscale-ruby && go build -v -buildmode=c-shared -o proxy/planetscale-linux.so'
 
     - name: Publish to GPR
       run: |

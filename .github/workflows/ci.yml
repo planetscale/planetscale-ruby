@@ -20,5 +20,5 @@ jobs:
       run: |
         gem install bundler
         bundle install
-        go build -v -buildmode=c-shared -o proxy/psdb-linux.so
+        go build -v -buildmode=c-shared -o proxy/planetscale-linux.so
         bundle exec rake test

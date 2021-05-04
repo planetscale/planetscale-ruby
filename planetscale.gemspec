@@ -2,11 +2,11 @@
 
 lib = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'psdb/version'
+require 'planetscale/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'psdb'
-  spec.version       = PSDB::VERSION
+  spec.name          = 'planetscale'
+  spec.version       = PlanetScale::VERSION
   spec.authors       = ['Nick Van Wiggeren']
   spec.email         = ['nick@planetscale.com']
 
@@ -21,9 +21,9 @@ Gem::Specification.new do |spec|
     spec.metadata['allowed_push_host'] = 'https://rubygems.pkg.github.com/'
 
     spec.metadata['homepage_uri'] = spec.homepage
-    spec.metadata['source_code_uri'] = 'https://github.com/planetscale/psdb-ruby'
-    spec.metadata['changelog_uri'] = 'https://github.com/planetscale/psdb-ruby'
-    spec.metadata['github_repo'] = 'ssh://github.com/planetscale/psdb-ruby'
+    spec.metadata['source_code_uri'] = 'https://github.com/planetscale/planetscale-ruby'
+    spec.metadata['changelog_uri'] = 'https://github.com/planetscale/planetscale-ruby'
+    spec.metadata['github_repo'] = 'ssh://github.com/planetscale/planetscale-ruby'
   else
     raise 'RubyGems 2.0 or newer is required to protect against ' \
       'public gem pushes.'

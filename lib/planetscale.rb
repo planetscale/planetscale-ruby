@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
-require 'psdb/version'
+require 'planetscale/version'
 require 'ffi'
 require 'pry'
-module PSDB
+
+module PlanetScale
   class <<self
     def start(auth_method: Proxy::AUTH_AUTO, **kwargs)
-      @proxy = PSDB::Proxy.new(auth_method: auth_method, **kwargs)
+      @proxy = Planetscale::Proxy.new(auth_method: auth_method, **kwargs)
       @proxy.start
     end
   end
@@ -27,7 +28,7 @@ module PSDB
       layout :r0, :pointer, :r1, :pointer
     end
 
-    ffi_lib File.expand_path("../../proxy/psdb-#{Gem::Platform.local.os}.so", __FILE__)
+    ffi_lib File.expand_path("../../proxy/planetscale-#{Gem::Platform.local.os}.so", __FILE__)
     attach_function :startfromenv, %i[string string string], ProxyReturn.by_value
     attach_function :startfromtoken, %i[string string string string string], ProxyReturn.by_value
     attach_function :startfromstatic, %i[string string string string string string string string], ProxyReturn.by_value
