@@ -3,13 +3,12 @@ name: Ruby Gem
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]  
 
 jobs:
   build:
     name: Build + Publish
     runs-on: macos-latest
+    timeout-minutes: 25
 
     steps:
     - uses: actions/checkout@v2
