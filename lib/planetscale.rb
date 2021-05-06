@@ -7,7 +7,7 @@ require 'pry'
 module PlanetScale
   class <<self
     def start(auth_method: Proxy::AUTH_AUTO, **kwargs)
-      @proxy = Planetscale::Proxy.new(auth_method: auth_method, **kwargs)
+      @proxy = PlanetScale::Proxy.new(auth_method: auth_method, **kwargs)
       @proxy.start
     end
   end
