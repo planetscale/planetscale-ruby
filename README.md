@@ -66,11 +66,11 @@ To use this Gem in 'production', we'll start by creating a PlanetScale Service T
 To configure your application in production, you'll need to feed it all of the right information via environment variables:
 
 ```
-PSDB_ORG=<org_name>
-PSDB_DB=<db_name>
-PSDB_DB_BRANCH=main
-PSDB_TOKEN_NAME=0sph6kvz5bxi
-PSDB_TOKEN=<redacted>
+PSCALE_ORG=<org_name>
+PSCALE_DB=<db_name>
+PSCALE_DB_BRANCH=main
+PSCALE_TOKEN_NAME=0sph6kvz5bxi
+PSCALE_TOKEN=<redacted>
 ```
 
 ## Development

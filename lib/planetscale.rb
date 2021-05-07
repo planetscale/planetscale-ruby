@@ -42,21 +42,21 @@ module PlanetScale
         PSCALE_FILE
       end
 
-      @cfg_file = kwargs[:cfg_file] || ENV['PSDB_DB_CONFIG'] || default_file
+      @cfg_file = kwargs[:cfg_file] || ENV['PSCALE_DB_CONFIG'] || default_file
 
-      @branch_name = kwargs[:branch] || ENV['PSDB_DB_BRANCH']
+      @branch_name = kwargs[:branch] || ENV['PSCALE_DB_BRANCH']
       @branch = lookup_branch
 
-      @db_name = kwargs[:db] || ENV['PSDB_DB']
+      @db_name = kwargs[:db] || ENV['PSCALE_DB']
       @db = lookup_database
 
-      @org_name = kwargs[:org] || ENV['PSDB_ORG']
+      @org_name = kwargs[:org] || ENV['PSCALE_ORG']
       @org = lookup_org
 
       raise ArgumentError, 'missing required configuration variables' if [@db, @branch, @org].any?(&:nil?)
 
-      @token_name = kwargs[:token_id] || ENV['PSDB_TOKEN_NAME']
-      @token = kwargs[:token] || ENV['PSDB_TOKEN']
+      @token_name = kwargs[:token_id] || ENV['PSCALE_TOKEN_NAME']
+      @token = kwargs[:token] || ENV['PSCALE_TOKEN']
 
       if @token && @token_name && auto_auth?
         @auth_method = AUTH_SERVICE_TOKEN
