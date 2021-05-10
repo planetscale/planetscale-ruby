@@ -26,7 +26,7 @@ import (
 )
 
 type controller struct {
-	listenAddr string
+	localAddr string
 
 	org, db, branch string
 
@@ -45,13 +45,12 @@ func newController(org, database, branch string, opts ...controllerOpt) (*contro
 	buf, _ := circbuf.NewBuffer(16384)
 
 	c := &controller{
-		listenAddr: "127.0.0.1:6060", // default
-		org:        org,
-		db:         database,
-		branch:     branch,
-		logBuf:     buf,
-		logger:     createLogger(buf),
-		r:          mux.NewRouter(),
+		org:    org,
+		db:     database,
+		branch: branch,
+		logBuf: buf,
+		logger: createLogger(buf),
+		r:      mux.NewRouter(),
 	}
 
 	c.r.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
@@ -69,9 +68,13 @@ func newController(org, database, branch string, opts ...controllerOpt) (*contro
 func (c *controller) start() (string, error) {
 	opts := proxy.Options{
 		CertSource: c.certSrc,
-		LocalAddr:  "127.0.0.1:3305", // todo(nickvanw): Configurable
+		LocalAddr:  "127.0.0.1:3305", // default
 		Instance:   fmt.Sprintf("%s/%s/%s", c.org, c.db, c.branch),
 		Logger:     c.logger,
+	}
+
+	if c.localAddr != "" {
+		opts.LocalAddr = c.localAddr
 	}
 
 	if c.certSrc == nil {
@@ -130,7 +133,7 @@ func withClient(ps *planetscale.Client) controllerOpt {
 
 func withListen(addr string) controllerOpt {
 	return func(c *controller) error {
-		c.listenAddr = addr
+		c.localAddr = addr
 		return nil
 	}
 }
