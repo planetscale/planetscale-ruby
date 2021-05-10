@@ -14,27 +14,39 @@ import (
 const accessTokenDir string = "~/.config/planetscale"
 
 //export startfromenv
-func startfromenv(org, database, branch *C.char) (*C.char, *C.char) {
+func startfromenv(org, database, branch, listenAddr *C.char) (*C.char, *C.char) {
 	client, err := newClientFromEnv()
 	if err != nil {
 		return nil, nilOrError(err)
 	}
 
-	return startproxy(org, database, branch, withClient(client))
+	opts := []controllerOpt{withClient(client)}
+
+	if a := C.GoString(listenAddr); a != "" {
+		opts = append(opts, withListen(a))
+	}
+
+	return startproxy(org, database, branch, opts...)
 }
 
 //export startfromtoken
-func startfromtoken(tokenName, token, org, database, branch *C.char) (*C.char, *C.char) {
+func startfromtoken(tokenName, token, org, database, branch, listenAddr *C.char) (*C.char, *C.char) {
 	client, err := newClientFromServiceToken(C.GoString(tokenName), C.GoString(token))
 	if err != nil {
 		return nil, nilOrError(err)
 	}
 
-	return startproxy(org, database, branch, withClient(client))
+	opts := []controllerOpt{withClient(client)}
+
+	if a := C.GoString(listenAddr); a != "" {
+		opts = append(opts, withListen(a))
+	}
+
+	return startproxy(org, database, branch, opts...)
 }
 
 //export startfromstatic
-func startfromstatic(org, database, branch, privKey, cert, chain, addr, port *C.char) (*C.char, *C.char) {
+func startfromstatic(org, database, branch, privKey, cert, chain, addr, port, listenAddr *C.char) (*C.char, *C.char) {
 	certSource := &localCertSource{
 		privKey:     C.GoString(privKey),
 		certificate: C.GoString(cert),
@@ -43,7 +55,13 @@ func startfromstatic(org, database, branch, privKey, cert, chain, addr, port *C.
 		port:        C.GoString(port),
 	}
 
-	return startproxy(org, database, branch, withLocalCertSource(certSource))
+	opts := []controllerOpt{withLocalCertSource(certSource)}
+
+	if a := C.GoString(listenAddr); a != "" {
+		opts = append(opts, withListen(a))
+	}
+
+	return startproxy(org, database, branch, opts...)
 }
 
 func startproxy(org, database, branch *C.char, opts ...controllerOpt) (*C.char, *C.char) {

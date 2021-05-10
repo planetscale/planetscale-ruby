@@ -29,9 +29,9 @@ module PlanetScale
     end
 
     ffi_lib File.expand_path("../../proxy/planetscale-#{Gem::Platform.local.os}.so", __FILE__)
-    attach_function :startfromenv, %i[string string string], ProxyReturn.by_value
-    attach_function :startfromtoken, %i[string string string string string], ProxyReturn.by_value
-    attach_function :startfromstatic, %i[string string string string string string string string], ProxyReturn.by_value
+    attach_function :startfromenv, %i[string string string string], ProxyReturn.by_value
+    attach_function :startfromtoken, %i[string string string string string string], ProxyReturn.by_value
+    attach_function :startfromstatic, %i[string string string string string string string string string], ProxyReturn.by_value
 
     def initialize(auth_method: AUTH_AUTO, **kwargs)
       @auth_method = auth_method
@@ -73,18 +73,20 @@ module PlanetScale
       if local_auth? && [@priv_key, @certificate, @cert_chain, @remote_addr, @port].any?(&:nil?)
         raise ArgumentError, 'missing configuration options for auth'
       end
+
+      @listen_addr = kwargs[:listen_addr] || ENV['LISTEN_ADDR']
     end
 
     def start
       ret = case @auth_method
       when AUTH_PSCALE
-        startfromenv(@org, @db, @branch)
+        startfromenv(@org, @db, @branch, @listen_addr)
       when AUTH_AUTO
-        startfromenv(@org, @db, @branch)
+        startfromenv(@org, @db, @branch, @listen_addr)
       when AUTH_SERVICE_TOKEN
-        startfromtoken(@token_name, @token, @org, @db, @branch)
+        startfromtoken(@token_name, @token, @org, @db, @branch, @listen_addr)
       when AUTH_STATIC
-        startfromstatic(@org, @db, @branch, @priv_key, @certificate, @cert_chain, @remote_addr, @port)
+        startfromstatic(@org, @db, @branch, @priv_key, @certificate, @cert_chain, @remote_addr, @port, @listen_addr)
       end
       @err = ret[:r1].null? ? nil : ret[:r1].read_string
       raise(ProxyError, @err) if @err
