@@ -2,7 +2,6 @@
 
 require 'planetscale/version'
 require 'ffi'
-require 'pry'
 
 module PlanetScale
   class <<self
