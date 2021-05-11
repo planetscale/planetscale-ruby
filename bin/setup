@@ -5,4 +5,13 @@ set -vx
 
 bundle install
 
-# Do any other automated setup that you need to do here
+OS="`uname`"
+case $OS in
+  'Darwin')
+    go build -v -buildmode=c-shared -o proxy/planetscale-darwin.so
+    ;;
+  'Linux')
+    go build -v -buildmode=c-shared -o proxy/planetscale-linux.so
+    ;;
+  *) ;;
+esac
