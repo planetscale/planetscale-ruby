@@ -1,0 +1,9 @@
+sources:
+  go: true
+
+allowed:
+  - mit
+  - apache-2.0
+  - bsd-2-clause
+  - bsd-3-clause
+  - mpl-2.0

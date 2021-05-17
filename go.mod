@@ -7,8 +7,8 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/planetscale/planetscale-go v0.18.0
-	github.com/planetscale/sql-proxy v0.3.1
+	github.com/planetscale/planetscale-go v0.25.0
+	github.com/planetscale/sql-proxy v0.3.2
 	go.uber.org/zap v1.16.0
 	golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1 // indirect
 	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78 // indirect
