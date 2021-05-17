@@ -10,10 +10,9 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Nick Van Wiggeren']
   spec.email         = ['nick@planetscale.com']
 
-  spec.summary       = 'Write a short summary, because RubyGems requires one.'
-  spec.description   = 'Write a longer description or delete this line.'
+  spec.summary       = 'Ruby client for PlanetScale Databases'
   spec.homepage      = 'https://planetscale.com/'
-  spec.license       = 'MIT'
+  spec.license       = 'apache-2.0'
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
