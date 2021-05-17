@@ -7,7 +7,7 @@ require 'planetscale/version'
 Gem::Specification.new do |spec|
   spec.name          = 'planetscale'
   spec.version       = PlanetScale::VERSION
-  spec.authors       = ['Nick Van Wiggeren']
+  spec.authors       = ['Nick Van Wiggeren', 'Mike Coutermarsh', 'David Graham']
   spec.email         = ['nick@planetscale.com']
 
   spec.summary       = 'Write a short summary, because RubyGems requires one.'
