@@ -1,4 +1,4 @@
-name: Ruby Gem
+name: Ruby Gem - Build + Publish
 
 on:
   push:
@@ -15,9 +15,10 @@ jobs:
     - uses: nickvanw/actions-setup-docker@master
 
     - name: Set up Ruby 2.7
-      uses: actions/setup-ruby@v1
+      uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.7.x
+        ruby-version: 2.7.3
+        bundler-cache: true
 
     - name: Add SHORT_SHA env property with commit short sha
       run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV   
