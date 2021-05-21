@@ -1,4 +1,4 @@
-name: Ruby Gem
+name: Ruby Gem - Run Tests
 
 on:
   push:
@@ -13,12 +13,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ruby 2.7
-      uses: actions/setup-ruby@v1
+      uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.7.x
-    - name: Bundle and Test
+        ruby-version: 2.7.3
+        bundler-cache: true
+    - name: Build and Test
       run: |
-        gem install bundler
-        bundle install
         go build -v -buildmode=c-shared -o proxy/planetscale-linux.so
         bundle exec rake test
