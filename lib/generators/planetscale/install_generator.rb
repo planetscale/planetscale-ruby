@@ -23,9 +23,11 @@ class Planetscale
       @org ||= options[:organization]
     end 
 
+    APPLICATION_REQUIRE_REGEX = /(require_relative ("|')application("|')\n)/.freeze
+
     def create_planetscale_config
       create_file "config/planetscale.rb", "PlanetScale.start(org: '#{@org}')\n"
-      inject_into_file "config/environment.rb", after: "require_relative \"application\"\n" do <<~'RUBY'
+      inject_into_file "config/environment.rb", after: APPLICATION_REQUIRE_REGEX do <<~'RUBY'
         require_relative "planetscale"
       RUBY
       end
