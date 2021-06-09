@@ -1,12 +1,12 @@
 require 'rails/generators'
 
 class Planetscale
-  class InstallGenerator < Rails::Generators::Base    
+  class InstallGenerator < Rails::Generators::Base
     class_option :organization, type: :string, default: ''
 
     def read_config
       @database = "<db_name>"
-      file_path = File.join(Rails.root, PlanetScale::Proxy::PSCALE_FILE)
+      file_path = File.join(Rails.root, PlanetScale::Proxy::PLANETSCALE_FILE)
       return unless File.exist?(file_path)
 
       data = YAML.safe_load(File.read(file_path))
@@ -21,7 +21,7 @@ class Planetscale
       end
 
       @org ||= options[:organization]
-    end 
+    end
 
     APPLICATION_REQUIRE_REGEX = /(require_relative ("|')application("|')\n)/.freeze
 
@@ -34,7 +34,7 @@ class Planetscale
     end
 
     # todo(nickvanw): When we get rid of DB passwords, this can mostly go away, and we can just
-    # return the `DATABSE_URL` that the user should use. 
+    # return the `DATABSE_URL` that the user should use.
     def print_database_yaml
       d =
       <<~EOS
@@ -52,7 +52,7 @@ class Planetscale
       puts d
       puts "\nOr set DATABASE_URL=#{db_url}"
     end
-  end 
+  end
 end
 
 class String

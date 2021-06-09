@@ -43,7 +43,7 @@ development:
   database: <db_name>
 ```
 
-Now, your Rails app will boot the proxy as the app is starting, and connect to the `main` branch on your DB. 
+Now, your Rails app will boot the proxy as the app is starting, and connect to the `main` branch on your DB.
 
 ### Service Token Authentication
 
@@ -66,11 +66,11 @@ To use this Gem in 'production', we'll start by creating a PlanetScale Service T
 To configure your application in production, you'll need to feed it all of the right information via environment variables:
 
 ```
-PSCALE_ORG=<org_name>
-PSCALE_DB=<db_name>
-PSCALE_DB_BRANCH=main
-PSCALE_TOKEN_NAME=0sph6kvz5bxi
-PSCALE_TOKEN=<redacted>
+PLANETSCALE_ORG=<org_name>
+PLANETSCALE_DB=<db_name>
+PLANETSCALE_DB_BRANCH=main
+PLANETSCALE_TOKEN_NAME=0sph6kvz5bxi
+PLANETSCALE_TOKEN=<redacted>
 ```
 
 ## Development
@@ -85,4 +85,4 @@ Bug reports and pull requests are welcome. This Gem is internal to PlanetScale c
 
 ## License
 
-Currently this Gem is specified under the MIT license, however it has not been made public. Care will be taken before this is done to choose an appropriate license. 
+Currently this Gem is specified under the MIT license, however it has not been made public. Care will be taken before this is done to choose an appropriate license.
