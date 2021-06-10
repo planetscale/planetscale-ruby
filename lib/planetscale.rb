@@ -13,10 +13,10 @@ module PlanetScale
 
   class Proxy
     AUTH_SERVICE_TOKEN = 1 # Use Service Tokens for Auth
-    AUTH_PSCALE = 2 # Use externally configured `pscale` auth & org config
+    AUTH_PLANETSCALE = 2 # Use externally configured `pscale` auth & org config
     AUTH_STATIC = 3 # Use a locally provided certificate
     AUTH_AUTO = 4 # Default. Let the Gem figure it out
-    PSCALE_FILE = '.pscale.yml'
+    PLANETSCALE_FILE = '.pscale.yml'
 
     class ProxyError < StandardError
     end
@@ -36,26 +36,26 @@ module PlanetScale
       @auth_method = auth_method
 
       default_file = if defined?(Rails.root)
-        File.join(Rails.root, PSCALE_FILE) if defined?(Rails.root)
+        File.join(Rails.root, PLANETSCALE_FILE) if defined?(Rails.root)
       else
-        PSCALE_FILE
+        PLANETSCALE_FILE
       end
 
-      @cfg_file = kwargs[:cfg_file] || ENV['PSCALE_DB_CONFIG'] || default_file
+      @cfg_file = kwargs[:cfg_file] || ENV['PLANETSCALE_DB_CONFIG'] || default_file
 
-      @branch_name = kwargs[:branch] || ENV['PSCALE_DB_BRANCH']
+      @branch_name = kwargs[:branch] || ENV['PLANETSCALE_DB_BRANCH']
       @branch = lookup_branch
 
-      @db_name = kwargs[:db] || ENV['PSCALE_DB']
+      @db_name = kwargs[:db] || ENV['PLANETSCALE_DB']
       @db = lookup_database
 
-      @org_name = kwargs[:org] || ENV['PSCALE_ORG']
+      @org_name = kwargs[:org] || ENV['PLANETSCALE_ORG']
       @org = lookup_org
 
       raise ArgumentError, 'missing required configuration variables' if [@db, @branch, @org].any?(&:nil?)
 
-      @token_name = kwargs[:token_id] || ENV['PSCALE_TOKEN_NAME']
-      @token = kwargs[:token] || ENV['PSCALE_TOKEN']
+      @token_name = kwargs[:token_id] || ENV['PLANETSCALE_TOKEN_NAME']
+      @token = kwargs[:token] || ENV['PLANETSCALE_TOKEN']
 
       if @token && @token_name && auto_auth?
         @auth_method = AUTH_SERVICE_TOKEN
@@ -78,7 +78,7 @@ module PlanetScale
 
     def start
       ret = case @auth_method
-      when AUTH_PSCALE
+      when AUTH_PLANETSCALE
         startfromenv(@org, @db, @branch, @listen_addr)
       when AUTH_AUTO
         startfromenv(@org, @db, @branch, @listen_addr)
@@ -123,7 +123,7 @@ module PlanetScale
     end
 
     def env_auth?
-      @auth_method == AUTH_PSCALE
+      @auth_method == AUTH_PLANETSCALE
     end
 
     def token_auth?
