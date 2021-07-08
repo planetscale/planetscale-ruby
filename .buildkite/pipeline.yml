@@ -15,4 +15,4 @@ steps:
     - "bundle exec rake test"
   plugins:
     - docker#v3.8.0:
-        image: "ruby:2.7.3-slim"
+        image: "ruby:2.7.3-buster"
