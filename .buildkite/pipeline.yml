@@ -2,8 +2,15 @@ agents:
   queue: "public"
 
 steps:
+- name: "Go build"
+  command: "go build -v -buildmode=c-shared -o proxy/planetscale-linux.so.$BUILDKITE_COMMIT"
+  artifact_paths:
+    - "proxy/planetscale-linux.go.$BUILDKITE_COMMIT"
+  plugins:
+    - docker#v3.8.0:
+        image: "golang:1.16.4"
 - name: "Ruby build and test %n"
-  command: "go build -v -buildmode=c-shared -o proxy/planetscale-linux.so && bundle exec rake test"
+  command: "buildkite-agent artifact download proxy/planetscale-linux.go.$BUILDKITE_COMMIT proxy/planetscale-linux.go && bundle exec rake test"
   plugins:
     - docker#v3.8.0:
         image: "ruby:2.7.3-slim"
