@@ -10,8 +10,9 @@ steps:
 - wait
 - name: "Ruby build and test %n"
   commands:
-    - "mkdir proxy && apt-get install -y git"
+    - "mkdir proxy"
     - "buildkite-agent artifact download planetscale-linux.so.$BUILDKITE_COMMIT proxy/ && mv proxy/planetscale-linux.so.$BUILDKITE_COMMIT proxy/planetscale-linux.so"
+    - "bundle install"
     - "bundle exec rake test"
   plugins:
     - docker#v3.8.0:
