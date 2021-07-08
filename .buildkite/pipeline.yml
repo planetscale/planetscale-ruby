@@ -12,6 +12,7 @@ steps:
   commands:
     - "mkdir proxy"
     - "buildkite-agent artifact download planetscale-linux.so.$BUILDKITE_COMMIT proxy/ && mv proxy/planetscale-linux.so.$BUILDKITE_COMMIT proxy/planetscale-linux.so"
+    - "gem install bundler -v ~> 2 --no-document"
     - "bundle install"
     - "bundle exec rake test"
   plugins:
