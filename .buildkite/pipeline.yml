@@ -3,7 +3,7 @@ agents:
 
 steps:
 - name: "Go build"
-  command: "go build -v -buildmode=c-shared -o /workdir/proxy/planetscale-linux.so.$BUILDKITE_COMMIT"
+  command: "go build -vvvvv -buildmode=c-shared -o /workdir/proxy/planetscale-linux.so.$BUILDKITE_COMMIT"
   artifact_paths:
     - "/workdir/proxy/*"
   plugins:
