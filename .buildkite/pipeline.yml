@@ -1,5 +1,6 @@
 agents:
   queue: "public"
+
 steps:
 - name: "Ruby build and test %n"
   command: "go build -v -buildmode=c-shared -o proxy/planetscale-linux.so && bundle exec rake test"
