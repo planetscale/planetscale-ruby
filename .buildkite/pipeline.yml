@@ -6,4 +6,4 @@ steps:
   command: "go build -v -buildmode=c-shared -o proxy/planetscale-linux.so && bundle exec rake test"
   plugins:
     - docker#v3.8.0:
-        image: ruby2.7.3-slim
+        image: "ruby:2.7.3-slim"
