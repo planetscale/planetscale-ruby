@@ -9,7 +9,7 @@ steps:
         image: "golang:1.16.4"
 - wait
 - name: "Ruby build and test %n"
-  command: "buildkite-agent artifact download --debug planetscale-linux.so.$BUILDKITE_COMMIT proxy/planetscale-linux.go && bundle exec rake test"
+  command: "buildkite-agent artifact download --debug planetscale-linux.so.$BUILDKITE_COMMIT proxy/ && mv proxy/planetscale-linux.so{.$BUILDKITE_COMMIT,} && bundle exec rake test"
   plugins:
     - docker#v3.8.0:
         image: "ruby:2.7.3-slim"
