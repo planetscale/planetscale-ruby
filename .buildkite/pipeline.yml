@@ -24,6 +24,7 @@ steps:
 
 - name: "Check licenses %n"
   commands:
+    - "apt-get install -y cmake"
     - "gem install licensed"
   plugins:
     - docker#v3.8.0:
