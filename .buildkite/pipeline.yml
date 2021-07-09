@@ -26,7 +26,7 @@ steps:
   commands:
     - "apt-get update -y && apt-get install -y cmake"
     - "gem install licensed"
-    - "licensed cache && licensed status"
+    - "licensed cache && licensed status -c .licensed.yml"
   plugins:
     - docker#v3.8.0:
         image: "ruby:2.7-buster"
