@@ -9,13 +9,22 @@ steps:
   plugins:
     - docker#v3.8.0:
         image: "golang:1.16.4"
+
 - wait
+
 - name: "Ruby build and test %n"
   commands:
     - "mkdir proxy"
     - "buildkite-agent artifact download planetscale-linux.so.$BUILDKITE_COMMIT proxy/ && mv proxy/planetscale-linux.so.$BUILDKITE_COMMIT proxy/planetscale-linux.so"
     - "bundle install -j 8"
     - "bundle exec rake test"
+  plugins:
+    - docker#v3.8.0:
+        image: "ruby:2.7-buster"
+
+- name: "Check licenses %n"
+  commands:
+    - "gem install licensed"
   plugins:
     - docker#v3.8.0:
         image: "ruby:2.7-buster"
