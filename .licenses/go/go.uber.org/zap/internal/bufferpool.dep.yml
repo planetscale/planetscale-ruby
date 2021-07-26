@@ -1,6 +1,6 @@
 ---
 name: go.uber.org/zap/internal/bufferpool
-version: v1.16.0
+version: v1.18.1
 type: go
 summary: Package bufferpool houses zap's shared internal buffer pool.
 homepage: https://godoc.org/go.uber.org/zap/internal/bufferpool
