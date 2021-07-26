@@ -3,13 +3,14 @@ package planetscale
 import (
 	"bytes"
 	"context"
+	"crypto"
+	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"net/http"
 )
@@ -19,8 +20,8 @@ type CreateCertificateRequest struct {
 	DatabaseName string
 	Branch       string
 
-	// PrivateKey is used to sign the Certificate Sign Request (CSR).
-	PrivateKey *rsa.PrivateKey
+	// PrivateKey is used to generate the Certificate Sign Request (CSR).
+	PrivateKey crypto.PrivateKey
 }
 
 type CertificatesService interface {
@@ -29,7 +30,7 @@ type CertificatesService interface {
 
 type Cert struct {
 	ClientCert tls.Certificate
-	CACert     *x509.Certificate
+	CACerts    []*x509.Certificate
 	RemoteAddr string
 	Ports      RemotePorts
 }
@@ -57,10 +58,16 @@ func (c *certificatesService) Create(ctx context.Context, r *CreateCertificateRe
 		CommonName: cn,
 	}
 
+	switch priv := r.PrivateKey.(type) {
+	case *rsa.PrivateKey:
+	case *ecdsa.PrivateKey:
+	default:
+		return nil, fmt.Errorf("unsupported key type: %T, only supports ECDSA and RSA private keys", priv)
+	}
+
 	template := x509.CertificateRequest{
-		Version:            1,
-		Subject:            subj,
-		SignatureAlgorithm: x509.SHA256WithRSA,
+		Version: 1,
+		Subject: subj,
 	}
 
 	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, &template, r.PrivateKey)
@@ -105,15 +112,20 @@ func (c *certificatesService) Create(ctx context.Context, r *CreateCertificateRe
 		return nil, err
 	}
 
-	caCert, err := parseCert(cr.CertificateChain)
+	caCerts, err := parseCerts(cr.CertificateChain)
 	if err != nil {
 		return nil, fmt.Errorf("parsing certificate chain failed: %s", err)
 	}
 
+	privateKeyBytes, err := x509.MarshalPKCS8PrivateKey(r.PrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal private key: %s", err)
+	}
+
 	privateKey := pem.EncodeToMemory(
 		&pem.Block{
-			Type:  "RSA PRIVATE KEY",
-			Bytes: x509.MarshalPKCS1PrivateKey(r.PrivateKey),
+			Type:  "PRIVATE KEY",
+			Bytes: privateKeyBytes,
 		},
 	)
 
@@ -124,7 +136,7 @@ func (c *certificatesService) Create(ctx context.Context, r *CreateCertificateRe
 
 	return &Cert{
 		ClientCert: clientCert,
-		CACert:     caCert,
+		CACerts:    caCerts,
 		RemoteAddr: cr.RemoteAddr,
 		Ports: RemotePorts{
 			Proxy: cr.Ports["proxy"],
@@ -133,10 +145,22 @@ func (c *certificatesService) Create(ctx context.Context, r *CreateCertificateRe
 	}, nil
 }
 
-func parseCert(pemCert string) (*x509.Certificate, error) {
-	bl, _ := pem.Decode([]byte(pemCert))
-	if bl == nil {
-		return nil, errors.New("invalid PEM: " + pemCert)
+func parseCerts(pemCert string) ([]*x509.Certificate, error) {
+	perCertBlock := []byte(pemCert)
+	var certs []*x509.Certificate
+
+	for {
+		var certBlock *pem.Block
+		certBlock, perCertBlock = pem.Decode(perCertBlock)
+		if certBlock == nil {
+			break
+		}
+		cert, err := x509.ParseCertificate(certBlock.Bytes)
+		if err != nil {
+			return nil, err
+		}
+
+		certs = append(certs, cert)
 	}
-	return x509.ParseCertificate(bl.Bytes)
+	return certs, nil
 }
