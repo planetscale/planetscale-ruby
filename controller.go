@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
@@ -174,7 +175,7 @@ func newRemoteCertSource(client *planetscale.Client) *remoteCertSource {
 }
 
 func (r *remoteCertSource) Cert(ctx context.Context, org, db, branch string) (*proxy.Cert, error) {
-	pkey, err := rsa.GenerateKey(rand.Reader, 2048)
+	pkey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't generate private key: %s", err)
 	}
@@ -191,7 +192,7 @@ func (r *remoteCertSource) Cert(ctx context.Context, org, db, branch string) (*p
 
 	return &proxy.Cert{
 		ClientCert: cert.ClientCert,
-		CACert:     cert.CACert,
+		CACerts:    cert.CACerts,
 		RemoteAddr: cert.RemoteAddr,
 		Ports: proxy.RemotePorts{
 			Proxy: cert.Ports.Proxy,
@@ -213,7 +214,7 @@ func (l *localCertSource) Cert(ctx context.Context, org, db, branch string) (*pr
 		return nil, err
 	}
 
-	caCert, err := parseCert(l.certChain)
+	caCert, err := parseCerts(l.certChain)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +226,7 @@ func (l *localCertSource) Cert(ctx context.Context, org, db, branch string) (*pr
 
 	return &proxy.Cert{
 		ClientCert: clientCert,
-		CACert:     caCert,
+		CACerts:    caCert,
 		RemoteAddr: l.remoteAddr,
 		Ports: proxy.RemotePorts{
 			Proxy: port,
@@ -246,10 +247,22 @@ func logHandler(l *zap.Logger) func(http.Handler) http.Handler {
 	}
 }
 
-func parseCert(pemCert string) (*x509.Certificate, error) {
-	bl, _ := pem.Decode([]byte(pemCert))
-	if bl == nil {
-		return nil, errors.New("invalid PEM: " + pemCert)
+func parseCerts(pemCert string) ([]*x509.Certificate, error) {
+	perCertBlock := []byte(pemCert)
+	var certs []*x509.Certificate
+
+	for {
+		var certBlock *pem.Block
+		certBlock, perCertBlock = pem.Decode(perCertBlock)
+		if certBlock == nil {
+			break
+		}
+		cert, err := x509.ParseCertificate(certBlock.Bytes)
+		if err != nil {
+			return nil, err
+		}
+
+		certs = append(certs, cert)
 	}
-	return x509.ParseCertificate(bl.Bytes)
+	return certs, nil
 }

@@ -38,11 +38,13 @@ type Client struct {
 	// base URL for the API
 	baseURL *url.URL
 
+	AuditLogs        AuditLogsService
 	Backups          BackupsService
 	Databases        DatabasesService
 	Certificates     CertificatesService
 	DatabaseBranches DatabaseBranchesService
 	Organizations    OrganizationsService
+	Regions          RegionsService
 	DeployRequests   DeployRequestsService
 	ServiceTokens    ServiceTokenService
 }
@@ -130,11 +132,13 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 		}
 	}
 
+	c.AuditLogs = &auditlogsService{client: c}
 	c.Backups = &backupsService{client: c}
 	c.Databases = &databasesService{client: c}
 	c.Certificates = &certificatesService{client: c}
 	c.DatabaseBranches = &databaseBranchesService{client: c}
 	c.Organizations = &organizationsService{client: c}
+	c.Regions = &regionsService{client: c}
 	c.DeployRequests = &deployRequestsService{client: c}
 	c.ServiceTokens = &serviceTokenService{client: c}
 
@@ -174,11 +178,12 @@ func (c *Client) handleResponse(ctx context.Context, res *http.Response, v inter
 		if err != nil {
 			if _, ok := err.(*json.SyntaxError); ok {
 				return &Error{
-					msg:  "malformed response body received",
+					msg:  "malformed error response body received",
 					Code: ErrResponseMalformed,
 					Meta: map[string]string{
-						"body": string(out),
-						"err":  err.Error(),
+						"body":        string(out),
+						"err":         err.Error(),
+						"http_status": http.StatusText(res.StatusCode),
 					},
 				}
 			}
@@ -193,10 +198,11 @@ func (c *Client) handleResponse(ctx context.Context, res *http.Response, v inter
 		// TODO(fatih): fix the behavior on the API side
 		if *errorRes == (errorResponse{}) {
 			return &Error{
-				msg:  "internal error, please open an issue to github.com/planetscale/planetscale-go",
+				msg:  "internal error, response body doesn't match error type signature",
 				Code: ErrInternal,
 				Meta: map[string]string{
-					"body": string(out),
+					"body":        string(out),
+					"http_status": http.StatusText(res.StatusCode),
 				},
 			}
 		}
@@ -231,7 +237,8 @@ func (c *Client) handleResponse(ctx context.Context, res *http.Response, v inter
 				msg:  "malformed response body received",
 				Code: ErrResponseMalformed,
 				Meta: map[string]string{
-					"body": string(out),
+					"body":        string(out),
+					"http_status": http.StatusText(res.StatusCode),
 				},
 			}
 		}

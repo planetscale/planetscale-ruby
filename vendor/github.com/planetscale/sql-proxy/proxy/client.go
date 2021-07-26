@@ -20,12 +20,17 @@ const (
 	keepAlivePeriod = time.Minute
 )
 
+// CertError represents a Cert operation error.
+type CertError struct{ msg string }
+
+func (c *CertError) Error() string { return c.msg }
+
 // Cert represents the client certificate key pair in the root certiciate
 // authority that the client uses to verify server certificates.
 
 type Cert struct {
 	ClientCert tls.Certificate
-	CACert     *x509.Certificate
+	CACerts    []*x509.Certificate
 	RemoteAddr string
 	Ports      RemotePorts
 }
@@ -119,12 +124,6 @@ func NewClient(opts Options) (*Client, error) {
 		c.log = logger
 	}
 
-	// cache the certs for the given instance(s)
-	_, _, err := c.clientCerts(context.Background(), opts.Instance)
-	if err != nil {
-		c.log.Error("couldn't retrieve TLS certificate for the client", zap.Error(err))
-	}
-
 	return c, nil
 }
 
@@ -137,6 +136,13 @@ type Conn struct {
 // Run runs the proxy. It listens to the configured localhost address and
 // proxies the connection over a TLS tunnel to the remote DB instance.
 func (c *Client) Run(ctx context.Context) error {
+	// cache the certs for the given instance. This will also validate the
+	// input and ensure to exit early.
+	_, _, err := c.clientCerts(context.Background(), c.instance)
+	if err != nil {
+		return &CertError{msg: err.Error()}
+	}
+
 	c.log.Info("ready for new connections")
 	l, err := c.getListener()
 	if err != nil {
@@ -335,7 +341,9 @@ func (c *Client) clientCerts(ctx context.Context, instance string) (*tls.Config,
 	}
 
 	rootCertPool := x509.NewCertPool()
-	rootCertPool.AddCert(cert.CACert)
+	for _, caCert := range cert.CACerts {
+		rootCertPool.AddCert(caCert)
+	}
 
 	serverName := fmt.Sprintf("%s.%s.%s.%s", s[2], s[1], s[0], cert.RemoteAddr)
 	fullAddr := fmt.Sprintf("%s:%d", serverName, cert.Ports.Proxy)
@@ -343,6 +351,7 @@ func (c *Client) clientCerts(ctx context.Context, instance string) (*tls.Config,
 	cfg := &tls.Config{
 		ServerName:   serverName,
 		Certificates: []tls.Certificate{cert.ClientCert},
+		MinVersion:   tls.VersionTLS12,
 		RootCAs:      rootCertPool,
 		// Set InsecureSkipVerify to skip the default validation we are
 		// replacing. This will not disable VerifyConnection.
