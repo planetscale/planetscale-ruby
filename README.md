@@ -1,4 +1,5 @@
 # PlanetScale Ruby Client
+[![Gem Version](https://badge.fury.io/rb/planetscale.svg)](https://rubygems.org/gems/planetscale)
 
 This Gem provides an easy to use client for connecting your Ruby application to PlanetScale. It handles setting up a local proxy that allows you to connect to any PlanetScale database and branch without reconfiguration, so that you can easily swap and choose using only environment variables.
 
