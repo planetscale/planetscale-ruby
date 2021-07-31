@@ -8,7 +8,14 @@ bundle install
 OS="`uname`"
 case $OS in
   'Darwin')
-    go build -v -buildmode=c-shared -o proxy/planetscale-darwin.so
+    case $(uname -m) in
+      'arm64')
+        GOOS=darwin GOARCH=arm64 go build -v -buildmode=c-shared -o proxy/planetscale-darwin-arm64.so
+      ;;
+      *)
+        go build -v -buildmode=c-shared -o proxy/planetscale-darwin.so
+      ;;
+    esac
     ;;
   'Linux')
     go build -v -buildmode=c-shared -o proxy/planetscale-linux.so
