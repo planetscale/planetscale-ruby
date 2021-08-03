@@ -82,8 +82,8 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome. This Gem is internal to PlanetScale currently.
+Bug reports and pull requests are welcome.
 
 ## License
 
-Currently this Gem is specified under the MIT license, however it has not been made public. Care will be taken before this is done to choose an appropriate license.
+This gem is licensed under the [Apache License Version 2.0](LICENSE).
