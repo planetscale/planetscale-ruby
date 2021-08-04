@@ -1,6 +1,6 @@
 ---
 name: github.com/planetscale/planetscale-go/planetscale
-version: v0.36.0
+version: v0.38.0
 type: go
 summary:
 homepage: https://godoc.org/github.com/planetscale/planetscale-go/planetscale
