@@ -26,6 +26,9 @@ jobs:
     - name: Build shared library on OS X
       run: go build -v -buildmode=c-shared -o proxy/planetscale-darwin.so
 
+    - name: Build shared library on Apple Silicon OS X
+      run: GOOS=darwin GOARCH=arm64 go build -v -buildmode=c-shared -o proxy/planetscale-darwin-arm64.so
+
     - name: Build shared library on Linux
       run: docker run -v $(pwd):/planetscale-ruby golang sh -c 'cd /planetscale-ruby && go build -v -buildmode=c-shared -o proxy/planetscale-linux.so'
 
