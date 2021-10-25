@@ -122,6 +122,3 @@ func nilOrError(err error) *C.char {
 
 	return C.CString(err.Error())
 }
-
-func main() {
-}

@@ -236,3 +236,5 @@ func logHandler(l *zap.Logger) func(http.Handler) http.Handler {
 		return http.HandlerFunc(fn)
 	}
 }
+
+func main() {}
