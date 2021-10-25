@@ -46,11 +46,10 @@ func startfromtoken(tokenName, token, org, database, branch, listenAddr *C.char)
 }
 
 //export startfromstatic
-func startfromstatic(org, database, branch, privKey, cert, chain, addr, port, listenAddr *C.char) (*C.char, *C.char) {
+func startfromstatic(org, database, branch, privKey, cert, addr, port, listenAddr *C.char) (*C.char, *C.char) {
 	certSource := &localCertSource{
 		privKey:     C.GoString(privKey),
 		certificate: C.GoString(cert),
-		certChain:   C.GoString(chain),
 		remoteAddr:  C.GoString(addr),
 		port:        C.GoString(port),
 	}

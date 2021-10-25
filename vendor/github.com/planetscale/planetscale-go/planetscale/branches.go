@@ -11,12 +11,14 @@ import (
 
 // DatabaseBranch represents a database branch.
 type DatabaseBranch struct {
-	Name         string    `json:"name"`
-	ParentBranch string    `json:"parent_branch"`
-	Region       Region    `json:"region"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-	Status       string    `json:"status,omitempty"`
+	Name          string    `json:"name"`
+	ParentBranch  string    `json:"parent_branch"`
+	Region        Region    `json:"region"`
+	Ready         bool      `json:"ready"`
+	Production    bool      `json:"production"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+	AccessHostURL string    `json:"access_host_url"`
 }
 
 type databaseBranchesResponse struct {
@@ -31,6 +33,7 @@ type CreateDatabaseBranchRequest struct {
 	Region       string `json:"region,omitempty"`
 	Name         string `json:"name"`
 	ParentBranch string `json:"parent_branch"`
+	BackupID     string `json:"backup_id,omitempty"`
 }
 
 // ListDatabaseBranchesRequest encapsulates the request for listing the branches
@@ -51,14 +54,6 @@ type GetDatabaseBranchRequest struct {
 // DeleteDatabaseRequest encapsulates the request for deleting a database branch
 // from a database.
 type DeleteDatabaseBranchRequest struct {
-	Organization string
-	Database     string
-	Branch       string
-}
-
-// GetDatabaseBranchStatusRequest encapsulates the request for getting the status
-// of a specific database branch.
-type GetDatabaseBranchStatusRequest struct {
 	Organization string
 	Database     string
 	Branch       string
@@ -86,6 +81,37 @@ type RefreshSchemaRequest struct {
 	Branch       string `json:"-"`
 }
 
+// PromoteRequest encapsulates the request for promoting a branch to
+// production.
+type PromoteRequest struct {
+	Organization string `json:"-"`
+	Database     string `json:"-"`
+	Branch       string `json:"-"`
+}
+
+type GetPromotionRequestRequest struct {
+	Organization string `json:"-"`
+	Database     string `json:"-"`
+	Branch       string `json:"-"`
+}
+
+type PromotionRequestError struct {
+	Message string `json:"message"`
+	DocsUrl string `json:"docs_url"`
+}
+
+// BranchPromotionRequest represents a promotion request for a branch.
+type BranchPromotionRequest struct {
+	ID                    string                 `json:"id"`
+	Branch                string                 `json:"branch"`
+	PromotionRequestError *PromotionRequestError `json:"promotion_request_error"`
+	State                 string                 `json:"state"`
+	CreatedAt             time.Time              `json:"created_at"`
+	UpdatedAt             time.Time              `json:"updated_at"`
+	StartedAt             *time.Time             `json:"started_at"`
+	FinishedAt            *time.Time             `json:"finished_at"`
+}
+
 // DatabaseBranchesService is an interface for communicating with the PlanetScale
 // Database Branch API endpoint.
 type DatabaseBranchesService interface {
@@ -93,19 +119,15 @@ type DatabaseBranchesService interface {
 	List(context.Context, *ListDatabaseBranchesRequest) ([]*DatabaseBranch, error)
 	Get(context.Context, *GetDatabaseBranchRequest) (*DatabaseBranch, error)
 	Delete(context.Context, *DeleteDatabaseBranchRequest) error
-	GetStatus(context.Context, *GetDatabaseBranchStatusRequest) (*DatabaseBranchStatus, error)
 	Diff(context.Context, *DiffBranchRequest) ([]*Diff, error)
 	Schema(context.Context, *BranchSchemaRequest) ([]*Diff, error)
 	RefreshSchema(context.Context, *RefreshSchemaRequest) error
+	Promote(context.Context, *PromoteRequest) (*BranchPromotionRequest, error)
+	GetPromotionRequest(context.Context, *GetPromotionRequestRequest) (*BranchPromotionRequest, error)
 }
 
 type databaseBranchesService struct {
 	client *Client
-}
-
-// DatabaseBranchStatus represents the status of a PlanetScale database branch.
-type DatabaseBranchStatus struct {
-	Ready bool `json:"ready"`
 }
 
 var _ DatabaseBranchesService = &databaseBranchesService{}
@@ -212,22 +234,6 @@ func (d *databaseBranchesService) Delete(ctx context.Context, deleteReq *DeleteD
 	return err
 }
 
-// Status returns the status of a specific database branch
-func (d *databaseBranchesService) GetStatus(ctx context.Context, statusReq *GetDatabaseBranchStatusRequest) (*DatabaseBranchStatus, error) {
-	path := fmt.Sprintf("%s/%s/status", databaseBranchesAPIPath(statusReq.Organization, statusReq.Database), statusReq.Branch)
-	req, err := d.client.newRequest(http.MethodGet, path, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating request for branch status")
-	}
-
-	status := &DatabaseBranchStatus{}
-	if err := d.client.do(ctx, req, &status); err != nil {
-		return nil, err
-	}
-
-	return status, nil
-}
-
 // RefreshSchema refreshes the schema for a
 func (d *databaseBranchesService) RefreshSchema(ctx context.Context, refreshReq *RefreshSchemaRequest) error {
 	path := fmt.Sprintf("%s/%s/refresh-schema", databaseBranchesAPIPath(refreshReq.Organization, refreshReq.Database), refreshReq.Branch)
@@ -241,6 +247,40 @@ func (d *databaseBranchesService) RefreshSchema(ctx context.Context, refreshReq 
 	}
 
 	return nil
+}
+
+// PromoteBranch promotes a database's branch from a development branch to a
+// production branch.
+func (d *databaseBranchesService) Promote(ctx context.Context, promoteReq *PromoteRequest) (*BranchPromotionRequest, error) {
+	path := fmt.Sprintf("%s/promotion-request", databaseBranchAPIPath(promoteReq.Organization, promoteReq.Database, promoteReq.Branch))
+	req, err := d.client.newRequest(http.MethodPost, path, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating request for branch promotion")
+	}
+
+	promotionReq := &BranchPromotionRequest{}
+	err = d.client.do(ctx, req, &promotionReq)
+	if err != nil {
+		return nil, err
+	}
+
+	return promotionReq, nil
+}
+
+func (d *databaseBranchesService) GetPromotionRequest(ctx context.Context, getReg *GetPromotionRequestRequest) (*BranchPromotionRequest, error) {
+	path := fmt.Sprintf("%s/promotion-request", databaseBranchAPIPath(getReg.Organization, getReg.Database, getReg.Branch))
+	req, err := d.client.newRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating request for getting branch promotion request")
+	}
+
+	promotionReq := &BranchPromotionRequest{}
+	err = d.client.do(ctx, req, &promotionReq)
+	if err != nil {
+		return nil, err
+	}
+
+	return promotionReq, nil
 }
 
 func databaseBranchesAPIPath(org, db string) string {

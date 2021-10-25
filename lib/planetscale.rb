@@ -64,12 +64,11 @@ module PlanetScale
       raise ArgumentError, 'missing configured service token auth' if token_auth? && [@token_name, @token].any?(&:nil?)
 
       @priv_key = kwargs[:private_key]
-      @cert_chain = kwargs[:cert_chain]
       @remote_addr = kwargs[:remote_addr]
       @certificate = kwargs[:certificate]
       @port = kwargs[:port]
 
-      if local_auth? && [@priv_key, @certificate, @cert_chain, @remote_addr, @port].any?(&:nil?)
+      if local_auth? && [@priv_key, @certificate, @remote_addr, @port].any?(&:nil?)
         raise ArgumentError, 'missing configuration options for auth'
       end
 
@@ -85,7 +84,7 @@ module PlanetScale
       when AUTH_SERVICE_TOKEN
         startfromtoken(@token_name, @token, @org, @db, @branch, @listen_addr)
       when AUTH_STATIC
-        startfromstatic(@org, @db, @branch, @priv_key, @certificate, @cert_chain, @remote_addr, @port, @listen_addr)
+        startfromstatic(@org, @db, @branch, @priv_key, @certificate, @remote_addr, @port, @listen_addr)
       end
       @err = ret[:r1].null? ? nil : ret[:r1].read_string
       raise(ProxyError, @err) if @err

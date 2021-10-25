@@ -1,6 +1,6 @@
 ---
 name: go.uber.org/zap/internal/exit
-version: v1.18.1
+version: v1.19.1
 type: go
 summary: Package exit provides stubs so that unit tests can exercise code that calls
   os.Exit(1).

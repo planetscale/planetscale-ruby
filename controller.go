@@ -6,8 +6,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/tls"
-	"crypto/x509"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -192,8 +190,7 @@ func (r *remoteCertSource) Cert(ctx context.Context, org, db, branch string) (*p
 
 	return &proxy.Cert{
 		ClientCert: cert.ClientCert,
-		CACerts:    cert.CACerts,
-		RemoteAddr: cert.RemoteAddr,
+		AccessHost: cert.AccessHost,
 		Ports: proxy.RemotePorts{
 			Proxy: cert.Ports.Proxy,
 		},
@@ -203,18 +200,12 @@ func (r *remoteCertSource) Cert(ctx context.Context, org, db, branch string) (*p
 type localCertSource struct {
 	privKey     string
 	certificate string
-	certChain   string
 	remoteAddr  string
 	port        string
 }
 
 func (l *localCertSource) Cert(ctx context.Context, org, db, branch string) (*proxy.Cert, error) {
 	clientCert, err := tls.X509KeyPair([]byte(l.certificate), []byte(l.privKey))
-	if err != nil {
-		return nil, err
-	}
-
-	caCert, err := parseCerts(l.certChain)
 	if err != nil {
 		return nil, err
 	}
@@ -226,8 +217,7 @@ func (l *localCertSource) Cert(ctx context.Context, org, db, branch string) (*pr
 
 	return &proxy.Cert{
 		ClientCert: clientCert,
-		CACerts:    caCert,
-		RemoteAddr: l.remoteAddr,
+		AccessHost: l.remoteAddr,
 		Ports: proxy.RemotePorts{
 			Proxy: port,
 		},
@@ -245,24 +235,4 @@ func logHandler(l *zap.Logger) func(http.Handler) http.Handler {
 		}
 		return http.HandlerFunc(fn)
 	}
-}
-
-func parseCerts(pemCert string) ([]*x509.Certificate, error) {
-	perCertBlock := []byte(pemCert)
-	var certs []*x509.Certificate
-
-	for {
-		var certBlock *pem.Block
-		certBlock, perCertBlock = pem.Decode(perCertBlock)
-		if certBlock == nil {
-			break
-		}
-		cert, err := x509.ParseCertificate(certBlock.Bytes)
-		if err != nil {
-			return nil, err
-		}
-
-		certs = append(certs, cert)
-	}
-	return certs, nil
 }
