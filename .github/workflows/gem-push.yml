@@ -31,6 +31,7 @@ jobs:
       run: go build -v -buildmode=c-shared -o proxy/planetscale-darwin.so
 
     - name: Build shared library on Linux
+      uses: docker-practice/actions-setup-docker@master
       run: docker run -v $(pwd):/planetscale-ruby golang sh -c 'cd /planetscale-ruby && go build -v -buildmode=c-shared -o proxy/planetscale-linux.so'
 
     - name: Publish to GPR
