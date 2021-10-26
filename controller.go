@@ -16,6 +16,8 @@ import (
 
 	_ "net/http/pprof"
 
+	nanoid "github.com/matoous/go-nanoid/v2"
+
 	"github.com/armon/circbuf"
 	"github.com/gorilla/mux"
 	"github.com/planetscale/planetscale-go/planetscale"
@@ -23,6 +25,9 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
+const publicIdAlphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
+const publicIdLength = 6
 
 type controller struct {
 	localAddr string
@@ -178,21 +183,29 @@ func (r *remoteCertSource) Cert(ctx context.Context, org, db, branch string) (*p
 		return nil, fmt.Errorf("couldn't generate private key: %s", err)
 	}
 
-	cert, err := r.client.Certificates.Create(ctx, &planetscale.CreateCertificateRequest{
+	request := &planetscale.DatabaseBranchCertificateRequest{
 		Organization: org,
-		DatabaseName: db,
+		Database:     db,
 		Branch:       branch,
 		PrivateKey:   pkey,
-	})
+		DisplayName:  fmt.Sprintf("planetscale-ruby-%s-%s", time.Now().Format("2006-01-02"), nanoid.MustGenerate(publicIdAlphabet, publicIdLength)),
+	}
+
+	cert, err := r.client.Certificates.Create(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsPair, err := cert.X509KeyPair(request)
 	if err != nil {
 		return nil, err
 	}
 
 	return &proxy.Cert{
-		ClientCert: cert.ClientCert,
-		AccessHost: cert.AccessHost,
+		ClientCert: tlsPair,
+		AccessHost: cert.Branch.AccessHostURL,
 		Ports: proxy.RemotePorts{
-			Proxy: cert.Ports.Proxy,
+			Proxy: 3307,
 		},
 	}, nil
 }
