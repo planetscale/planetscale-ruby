@@ -4,6 +4,8 @@ set -euo pipefail
 GOOS=darwin GOARCH=amd64 go build -v -buildmode=c-shared -o proxy/planetscale-darwin-amd64.so
 GOOS=darwin GOARCH=arm64 go build -v -buildmode=c-shared -o proxy/planetscale-darwin-arm64.so
 
-lipo -create -output proxy/planetscale-darwin.so proxy/planetscale-darwin-amd64.so  proxy/planetscale-darwin-arm64.so
+lipo -create -output proxy/planetscale-darwin.so proxy/planetscale-darwin-amd64.so proxy/planetscale-darwin-arm64.so
 
 rm -rf proxy/planetscale-darwin-amd64.so proxy/planetscale-darwin-arm64.so
+
+file proxy/planetscale-darwin.so
