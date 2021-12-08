@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: Build + Publish
-    runs-on: macos-latest
+    runs-on: macos-11
     timeout-minutes: 25
 
     steps:
@@ -28,7 +28,7 @@ jobs:
         go-version: ^1.17
 
     - name: Build shared library on OS X
-      run: go build -v -buildmode=c-shared -o proxy/planetscale-darwin.so
+      run: bin/build-darwin
 
     - name: Install Docker
       uses: docker-practice/actions-setup-docker@master
