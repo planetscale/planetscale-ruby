@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-GOOS=darwin GOARCH=amd64 go build -v -buildmode=c-shared -o proxy/planetscale-darwin-amd64.so
-GOOS=darwin GOARCH=arm64 go build -v -buildmode=c-shared -o proxy/planetscale-darwin-arm64.so
+CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags '-w -s' -buildmode=c-shared -o proxy/planetscale-darwin-x86_64.so
+CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags '-w -s' -buildmode=c-shared -o proxy/planetscale-darwin-arm64.so
 
-lipo -create -output proxy/planetscale-darwin.so proxy/planetscale-darwin-amd64.so proxy/planetscale-darwin-arm64.so
+rm proxy/*.h
 
-rm -rf proxy/planetscale-darwin-amd64.so proxy/planetscale-darwin-arm64.so
-
-file proxy/planetscale-darwin.so
+file proxy/planetscale-darwin-x86_64.so
+file proxy/planetscale-darwin-arm64.so

@@ -27,7 +27,8 @@ module PlanetScale
       layout :r0, :pointer, :r1, :pointer
     end
 
-    ffi_lib File.expand_path("../../proxy/planetscale-#{Gem::Platform.local.os}.so", __FILE__)
+    OS = Gem.win_platform? ? "windows" : Gem::Platform.local.os
+    ffi_lib File.expand_path("../../proxy/planetscale-#{OS}-#{Gem::Platform.local.cpu}.so", __FILE__)
     attach_function :startfromenv, %i[string string string string], ProxyReturn.by_value
     attach_function :startfromtoken, %i[string string string string string string], ProxyReturn.by_value
     attach_function :startfromstatic, %i[string string string string string string string string string], ProxyReturn.by_value
