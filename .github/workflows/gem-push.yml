@@ -34,7 +34,7 @@ jobs:
       uses: docker-practice/actions-setup-docker@master
 
     - name: Build shared library on Linux
-      run: docker run -v $(pwd):/planetscale-ruby golang sh -c 'cd /planetscale-ruby && go build -v -buildmode=c-shared -o proxy/planetscale-linux.so'
+      run: docker run -v $(pwd):/planetscale-ruby golang sh -c 'cd /planetscale-ruby && bin/build-linux'
 
     - name: Publish to GPR
       run: |

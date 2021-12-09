@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+apt-get update && apt-get install --no-install-recommends --yes gcc-aarch64-linux-gnu gcc-mingw-w64 libc6-dev-arm64-cross file
+
+CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags '-w -s' -buildmode=c-shared -o proxy/planetscale-linux-x86_64.so
+CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC=aarch64-linux-gnu-gcc go build -trimpath -ldflags='-w -s' -buildmode=c-shared -o proxy/planetscale-linux-arm64.so
+CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -trimpath -ldflags='-w -s' -buildmode=c-shared -o proxy/planetscale-windows-x86_64.so
+
+rm proxy/*.h
+
+file proxy/planetscale-linux-x86_64.so
+file proxy/planetscale-linux-arm64.so
+file proxy/planetscale-windows-x86_64.so

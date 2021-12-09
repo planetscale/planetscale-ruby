@@ -11,7 +11,7 @@ case $OS in
     bin/build-darwin
     ;;
   'Linux')
-    go build -v -buildmode=c-shared -o proxy/planetscale-linux.so
+    go build -v -buildmode=c-shared -trimpath -ldflags='-s -w' -o proxy/planetscale-linux-x86_64.so
     ;;
   *) ;;
 esac

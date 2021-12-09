@@ -4,16 +4,16 @@ agents:
 steps:
 - name: "Go build"
   commands:
-    - "go build -v -x -buildmode=c-shared -o planetscale-linux.so.$BUILDKITE_COMMIT"
-    - "buildkite-agent artifact upload planetscale-linux.so.$BUILDKITE_COMMIT"
+    - "go build -v -x -trimpath -ldflags='-s -w' -buildmode=c-shared -o planetscale-linux-x86_64.so.$BUILDKITE_COMMIT"
+    - "buildkite-agent artifact upload planetscale-linux-x86_64.so.$BUILDKITE_COMMIT"
   plugins:
     - docker#v3.8.0:
-        image: "golang:1.16.4"
+        image: "golang:1.17.4"
 - wait
 - name: "Ruby build and test %n"
   commands:
     - "mkdir proxy"
-    - "buildkite-agent artifact download planetscale-linux.so.$BUILDKITE_COMMIT proxy/ && mv proxy/planetscale-linux.so.$BUILDKITE_COMMIT proxy/planetscale-linux.so"
+    - "buildkite-agent artifact download planetscale-linux-x86_64.so.$BUILDKITE_COMMIT proxy/ && mv proxy/planetscale-linux-x86_64.so.$BUILDKITE_COMMIT proxy/planetscale-linux-x86_64.so"
     - "bundle install -j 8"
     - "bundle exec rake test"
   plugins:
