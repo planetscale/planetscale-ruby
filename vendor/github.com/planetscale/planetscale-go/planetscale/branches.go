@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/pkg/errors"
@@ -16,6 +17,7 @@ type DatabaseBranch struct {
 	Region        Region    `json:"region"`
 	Ready         bool      `json:"ready"`
 	Production    bool      `json:"production"`
+	HtmlURL       string    `json:"html_url"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 	AccessHostURL string    `json:"access_host_url"`
@@ -71,6 +73,15 @@ type BranchSchemaRequest struct {
 	Organization string `json:"-"`
 	Database     string `json:"-"`
 	Branch       string `json:"-"`
+	Keyspace     string `json:"-"`
+}
+
+// BranchVSchemaRequest encapsulates a request for getting a branch's VSchema.
+type BranchVSchemaRequest struct {
+	Organization string `json:"-"`
+	Database     string `json:"-"`
+	Branch       string `json:"-"`
+	Keyspace     string `json:"-"`
 }
 
 // RefreshSchemaRequest reflects the request needed to refresh a schema
@@ -118,6 +129,12 @@ type BranchPromotionRequest struct {
 	FinishedAt *time.Time                   `json:"finished_at"`
 }
 
+// VSchemaDiff returns the diff for a vschema
+type VSchemaDiff struct {
+	Raw  string `json:"raw"`
+	HTML string `json:"html"`
+}
+
 // DatabaseBranchesService is an interface for communicating with the PlanetScale
 // Database Branch API endpoint.
 type DatabaseBranchesService interface {
@@ -127,6 +144,7 @@ type DatabaseBranchesService interface {
 	Delete(context.Context, *DeleteDatabaseBranchRequest) error
 	Diff(context.Context, *DiffBranchRequest) ([]*Diff, error)
 	Schema(context.Context, *BranchSchemaRequest) ([]*Diff, error)
+	VSchema(context.Context, *BranchVSchemaRequest) (*VSchemaDiff, error)
 	RefreshSchema(context.Context, *RefreshSchemaRequest) error
 	Promote(context.Context, *PromoteRequest) (*BranchPromotionRequest, error)
 	GetPromotionRequest(context.Context, *GetPromotionRequestRequest) (*BranchPromotionRequest, error)
@@ -166,6 +184,15 @@ type schemaResponse struct {
 
 func (d *databaseBranchesService) Schema(ctx context.Context, schemaReq *BranchSchemaRequest) ([]*Diff, error) {
 	path := fmt.Sprintf("%s/schema", databaseBranchAPIPath(schemaReq.Organization, schemaReq.Database, schemaReq.Branch))
+	v := url.Values{}
+	if schemaReq.Keyspace != "" {
+		v.Add("keyspace", schemaReq.Keyspace)
+	}
+
+	if vals := v.Encode(); vals != "" {
+		path += "?" + vals
+	}
+
 	req, err := d.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating http request")
@@ -177,6 +204,30 @@ func (d *databaseBranchesService) Schema(ctx context.Context, schemaReq *BranchS
 	}
 
 	return schemas.Schemas, nil
+}
+
+func (d *databaseBranchesService) VSchema(ctx context.Context, vSchemaReq *BranchVSchemaRequest) (*VSchemaDiff, error) {
+	path := fmt.Sprintf("%s/vschema", databaseBranchAPIPath(vSchemaReq.Organization, vSchemaReq.Database, vSchemaReq.Branch))
+	v := url.Values{}
+	if vSchemaReq.Keyspace != "" {
+		v.Add("keyspace", vSchemaReq.Keyspace)
+	}
+
+	if vals := v.Encode(); vals != "" {
+		path += "?" + vals
+	}
+
+	req, err := d.client.newRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating http request")
+	}
+
+	vSchema := &VSchemaDiff{}
+	if err := d.client.do(ctx, req, &vSchema); err != nil {
+		return nil, err
+	}
+
+	return vSchema, nil
 }
 
 // Create creates a new branch for an organization's database.

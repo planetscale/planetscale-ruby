@@ -1,8 +1,8 @@
 ---
 name: github.com/planetscale/sql-proxy/proxy
-version: v0.12.0
+version: v0.13.0
 type: go
-summary:
+summary: 
 homepage: https://godoc.org/github.com/planetscale/sql-proxy/proxy
 license: apache-2.0
 licenses:

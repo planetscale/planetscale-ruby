@@ -13,7 +13,7 @@ import (
 type CreateDatabaseRequest struct {
 	Organization string
 	Name         string `json:"name"`
-	Notes        string `json:"notes"`
+	Notes        string `json:"notes,omitempty"`
 	Region       string `json:"region,omitempty"`
 }
 
@@ -42,16 +42,36 @@ type DatabasesService interface {
 	Create(context.Context, *CreateDatabaseRequest) (*Database, error)
 	Get(context.Context, *GetDatabaseRequest) (*Database, error)
 	List(context.Context, *ListDatabasesRequest) ([]*Database, error)
-	Delete(context.Context, *DeleteDatabaseRequest) error
+	Delete(context.Context, *DeleteDatabaseRequest) (*DatabaseDeletionRequest, error)
 }
+
+// DatabaseDeletionRequest encapsulates the request for deleting a database from
+// an organization.
+type DatabaseDeletionRequest struct {
+	ID string `json:"id"`
+}
+
+// DatabaseState represents the state of a database
+type DatabaseState string
+
+const (
+	DatabasePending         DatabaseState = "pending"
+	DatabaseImporting       DatabaseState = "importing"
+	DatabaseAwakening       DatabaseState = "awakening"
+	DatabaseSleepInProgress DatabaseState = "sleep_in_progress"
+	DatabaseSleeping        DatabaseState = "sleeping"
+	DatabaseReady           DatabaseState = "ready"
+)
 
 // Database represents a PlanetScale database
 type Database struct {
-	Name      string    `json:"name"`
-	Notes     string    `json:"notes"`
-	Region    Region    `json:"region"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Name      string        `json:"name"`
+	Notes     string        `json:"notes"`
+	Region    Region        `json:"region"`
+	State     DatabaseState `json:"state"`
+	HtmlURL   string        `json:"html_url"`
+	CreatedAt time.Time     `json:"created_at"`
+	UpdatedAt time.Time     `json:"updated_at"`
 }
 
 // Database represents a list of PlanetScale databases
@@ -72,7 +92,7 @@ func NewDatabasesService(client *Client) *databasesService {
 }
 
 func (ds *databasesService) List(ctx context.Context, listReq *ListDatabasesRequest) ([]*Database, error) {
-	req, err := ds.client.newRequest(http.MethodGet, databasesAPIPath(listReq.Organization), nil)
+	req, err := ds.client.newRequest(http.MethodGet, databasesAPIPath(listReq.Organization)+"?per_page=100", nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating http request")
 	}
@@ -117,15 +137,20 @@ func (ds *databasesService) Get(ctx context.Context, getReq *GetDatabaseRequest)
 	return db, nil
 }
 
-func (ds *databasesService) Delete(ctx context.Context, deleteReq *DeleteDatabaseRequest) error {
+func (ds *databasesService) Delete(ctx context.Context, deleteReq *DeleteDatabaseRequest) (*DatabaseDeletionRequest, error) {
 	path := fmt.Sprintf("%s/%s", databasesAPIPath(deleteReq.Organization), deleteReq.Database)
 	req, err := ds.client.newRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return errors.Wrap(err, "error creating request for delete database")
+		return nil, errors.Wrap(err, "error creating request for delete database")
 	}
 
-	err = ds.client.do(ctx, req, nil)
-	return err
+	var dbr *DatabaseDeletionRequest
+	err = ds.client.do(ctx, req, &dbr)
+	if err != nil {
+		return nil, err
+	}
+
+	return dbr, nil
 }
 
 func databasesAPIPath(org string) string {

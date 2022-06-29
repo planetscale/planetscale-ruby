@@ -26,6 +26,8 @@ type DeployRequestsService interface {
 	Diff(ctx context.Context, diffReq *DiffRequest) ([]*Diff, error)
 	Get(context.Context, *GetDeployRequestRequest) (*DeployRequest, error)
 	List(context.Context, *ListDeployRequestsRequest) ([]*DeployRequest, error)
+	SkipRevertDeploy(context.Context, *SkipRevertDeployRequestRequest) (*DeployRequest, error)
+	RevertDeploy(context.Context, *RevertDeployRequestRequest) (*DeployRequest, error)
 }
 
 // DeployRequestReview posts a review to a deploy request.
@@ -135,6 +137,8 @@ type DeployRequest struct {
 
 	Deployment *Deployment `json:"deployment"`
 
+	HtmlURL string `json:"html_url"`
+
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	ClosedAt  *time.Time `json:"closed_at"`
@@ -152,6 +156,18 @@ type CreateDeployRequestRequest struct {
 	Branch       string `json:"branch"`
 	IntoBranch   string `json:"into_branch"`
 	Notes        string `json:"notes"`
+}
+
+type SkipRevertDeployRequestRequest struct {
+	Organization string `json:"-"`
+	Database     string `json:"-"`
+	Number       uint64 `json:"-"`
+}
+
+type RevertDeployRequestRequest struct {
+	Organization string `json:"-"`
+	Database     string `json:"-"`
+	Number       uint64 `json:"-"`
 }
 
 type ReviewDeployRequestRequest struct {
@@ -275,6 +291,38 @@ func (d *deployRequestsService) Create(ctx context.Context, createReq *CreateDep
 // CancelDeploy cancels a queued deploy request.
 func (d *deployRequestsService) CancelDeploy(ctx context.Context, deployReq *CancelDeployRequestRequest) (*DeployRequest, error) {
 	path := deployRequestActionAPIPath(deployReq.Organization, deployReq.Database, deployReq.Number, "cancel")
+	req, err := d.client.newRequest(http.MethodPost, path, deployReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating http request")
+	}
+
+	dr := &DeployRequest{}
+	if err := d.client.do(ctx, req, &dr); err != nil {
+		return nil, err
+	}
+
+	return dr, nil
+}
+
+// SkipRevert skips a pending revert of a completed deploy request
+func (d *deployRequestsService) SkipRevertDeploy(ctx context.Context, deployReq *SkipRevertDeployRequestRequest) (*DeployRequest, error) {
+	path := deployRequestActionAPIPath(deployReq.Organization, deployReq.Database, deployReq.Number, "skip-revert")
+	req, err := d.client.newRequest(http.MethodPost, path, deployReq)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating http request")
+	}
+
+	dr := &DeployRequest{}
+	if err := d.client.do(ctx, req, &dr); err != nil {
+		return nil, err
+	}
+
+	return dr, nil
+}
+
+// RevertDeploy reverts a completed deploy request
+func (d *deployRequestsService) RevertDeploy(ctx context.Context, deployReq *RevertDeployRequestRequest) (*DeployRequest, error) {
+	path := deployRequestActionAPIPath(deployReq.Organization, deployReq.Database, deployReq.Number, "revert")
 	req, err := d.client.newRequest(http.MethodPost, path, deployReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating http request")
