@@ -1,6 +1,6 @@
 ---
 name: golang.org/x/oauth2/internal
-version: v0.0.0-20210413134643-5e61552d6c78
+version: v0.0.0-20220628200809-02e64fa58f26
 type: go
 summary: Package internal contains support packages for oauth2 package.
 homepage: https://godoc.org/golang.org/x/oauth2/internal
