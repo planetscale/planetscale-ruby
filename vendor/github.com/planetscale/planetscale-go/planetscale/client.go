@@ -42,6 +42,7 @@ type Client struct {
 	Backups          BackupsService
 	Databases        DatabasesService
 	DatabaseBranches DatabaseBranchesService
+	DataImports      DataImportsService
 	Organizations    OrganizationsService
 	Passwords        PasswordsService
 	Certificates     CertificatesService
@@ -137,6 +138,7 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	c.Backups = &backupsService{client: c}
 	c.Databases = &databasesService{client: c}
 	c.DatabaseBranches = &databaseBranchesService{client: c}
+	c.DataImports = &dataImportsService{client: c}
 	c.Organizations = &organizationsService{client: c}
 	c.Passwords = &passwordsService{client: c}
 	c.Certificates = &certificatesService{client: c}
@@ -228,8 +230,8 @@ func (c *Client) handleResponse(ctx context.Context, res *http.Response, v inter
 		}
 	}
 
-	// this means we don't care about unmrarshaling the response body into v
-	if v == nil {
+	// this means we don't care about unmarshaling the response body into v
+	if v == nil || res.StatusCode == http.StatusNoContent {
 		return nil
 	}
 

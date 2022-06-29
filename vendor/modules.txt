@@ -17,17 +17,19 @@ github.com/matoous/go-nanoid/v2
 github.com/mitchellh/go-homedir
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
-# github.com/planetscale/planetscale-go v0.51.0
+# github.com/planetscale/planetscale-go v0.65.0
 ## explicit
 github.com/planetscale/planetscale-go/planetscale
-# github.com/planetscale/sql-proxy v0.12.0
+# github.com/planetscale/sql-proxy v0.13.0
 ## explicit
 github.com/planetscale/sql-proxy/proxy
-# go.uber.org/atomic v1.7.0
+# go.uber.org/atomic v1.9.0
+## explicit
 go.uber.org/atomic
-# go.uber.org/multierr v1.6.0
+# go.uber.org/multierr v1.8.0
+## explicit
 go.uber.org/multierr
-# go.uber.org/zap v1.19.1
+# go.uber.org/zap v1.21.0
 ## explicit
 go.uber.org/zap
 go.uber.org/zap/buffer
@@ -35,11 +37,11 @@ go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
-# golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1
+# golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e
 ## explicit
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
-# golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78
+# golang.org/x/oauth2 v0.0.0-20220628200809-02e64fa58f26
 ## explicit
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
@@ -52,7 +54,8 @@ google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/protobuf v1.26.0
+# google.golang.org/protobuf v1.28.0
+## explicit
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
